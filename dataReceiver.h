@@ -6,12 +6,10 @@
 
 class DataReceiver {
 private:
-    static constexpr size_t cBufferSize = dataPacket::maxSize() + 1U; // +2 for start byte and checksum
+    static constexpr size_t cBufferSize = dataPacket::maxSize() + 1U; // +1 for the checksum
     enum class State {
         waiting,
-        r_address,
-        r_command,
-        r_length,
+        r_header,
         r_data,
         r_checksum,
         ready

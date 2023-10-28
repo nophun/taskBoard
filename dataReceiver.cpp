@@ -18,24 +18,22 @@ bool DataReceiver::receive_byte(uint8_t byte) {
     switch(m_state) {
         case State::waiting:
             if (byte == dataPacket::cStartByte) {
-                m_state = State::r_address;
+                m_state = State::r_header;
             }
             break;
-        case State::r_address:
+        case State::r_header:
             m_buffer[m_buffer_index++] = byte;
-            m_state = State::r_command;
-            break;
-        case State::r_command:
-            m_buffer[m_buffer_index++] = byte;
-            m_state = State::r_length;
-            break;
-        case State::r_length:
-            m_buffer[m_buffer_index++] = byte;
-            m_state = State::r_data;
+            if (m_buffer_index == dataPacket::cHeaderSize) {
+                if (byte != 0U) {
+                    m_state = State::r_data;
+                } else {
+                    m_state = State::r_checksum;
+                }
+            }
             break;
         case State::r_data:
             m_buffer[m_buffer_index++] = byte;
-            if (m_buffer_index == m_buffer[2] + 3) {
+            if (m_buffer_index == dataPacket::cHeaderSize + m_buffer[offsetof(dataPacket, length)]) {
                 m_state = State::r_checksum;
             }
             break;
@@ -54,13 +52,14 @@ bool DataReceiver::validate_buffer(void) {
         Serial.println("State not ready");
         return false;
     }
-    if (m_buffer[2] > dataPacket::cMaxDataSize) {
+    const uint8_t datalen = m_buffer[offsetof(dataPacket, length)];
+    if (datalen > dataPacket::cMaxDataSize) {
         Serial.println("Data size too large");
         return false;
     }
     uint8_t checksum = 0;
-    // calculate checksum of all bytes
-    for (size_t i = 0; i < m_buffer[2] + 4; ++i) {
+    // calculate checksum of all bytes, including the checksum byte
+    for (size_t i = 0; i < dataPacket::cHeaderSize + datalen + 1U; ++i) {
         checksum ^= m_buffer[i];
     }
     // check if checksum is correct
