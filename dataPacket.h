@@ -3,32 +3,38 @@
 #include <Arduino.h>
 #include <array>
 
-struct cmd1_req {
+struct addr_packet {
     uint8_t address;
 };
 
-struct cmd1_resp {
-    uint8_t address;
-};
-
-struct cmd2_resp {
-    uint8_t address;
-};
-
-struct cmd3_req {
+struct status_packet {
     uint8_t status1;
     uint8_t status2;
     uint8_t status3;
 };
 
-struct cmd3_resp {
-    uint8_t status1;
-    uint8_t status2;
-    uint8_t status3;
+struct title_packet {
+    static constexpr size_t cMaxTitleSize = 32U;
+    std::array<char, cMaxTitleSize> title_str;
+};
+
+struct class_packet {
+    static constexpr size_t cMaxClassificationSize = 16U;
+    std::array<char, cMaxClassificationSize> class_str;
+};
+
+struct desc_packet {
+    static constexpr size_t cMaxDescriptionSize = 128U;
+    std::array<char, cMaxDescriptionSize> desc_str;
+};
+
+struct counter_packet {
+    uint8_t counter;
+    uint8_t maximum;
 };
 
 struct dataPacket {
-    static constexpr size_t cMaxDataSize = 8U;
+    static constexpr size_t cMaxDataSize = 128U;
     static constexpr size_t cHeaderSize = 4U;
     static constexpr uint8_t cStartByte = 0x55;
     uint8_t source;
@@ -37,16 +43,26 @@ struct dataPacket {
     uint8_t length;
     union {
         std::array<uint8_t, cMaxDataSize> data;
-        struct cmd1_req cmd1_req;   struct cmd1_resp cmd1_resp;
-                                    struct cmd2_resp cmd2_resp;
-        struct cmd3_req cmd3_req;   struct cmd3_resp cmd3_resp;
+        struct addr_packet      addr_data;
+        struct status_packet    status_data;
+        struct title_packet     title_data;
+        struct class_packet     class_data;
+        struct desc_packet      desc_data;
+        struct counter_packet   counter_data;
     };
 
     void clear() {
+        source = 0U;
         address = 0U;
         command = 0U;
         length = 0U;
         memset(data.data(), 0U, cMaxDataSize);
+    }
+    void init(uint8_t src, uint8_t addr, uint8_t cmd) {
+        clear();
+        source = src;
+        address = addr;
+        command = cmd;
     }
     static constexpr uint8_t maxSize() {
         return cHeaderSize + cMaxDataSize;
@@ -69,4 +85,4 @@ struct dataPacket {
         }
         Serial.println("]");
     }
-}; // size: 11 bytes
+};

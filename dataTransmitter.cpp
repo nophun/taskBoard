@@ -9,7 +9,7 @@ void DataTransmitter::reset() {
     m_buffer.fill(0);
 }
 
-bool DataTransmitter::serialize(const dataPacket dataPacket) {
+bool DataTransmitter::serialize(const dataPacket& dataPacket) {
     uint8_t checksum = 0;
     reset();
     if (dataPacket.length > dataPacket::cMaxDataSize) {

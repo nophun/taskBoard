@@ -18,7 +18,7 @@ public:
 
 protected:
     void reset();
-    bool serialize(const dataPacket dataPacket);
+    bool serialize(const dataPacket& dataPacket);
     uint8_t* get_buffer() { return m_buffer.data(); }
     size_t get_buffer_length() const { return m_buffer_length; }
 

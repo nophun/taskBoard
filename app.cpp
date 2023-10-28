@@ -4,19 +4,23 @@ bool App::handle_data_packet(const dataPacket& request, dataPacket& response) {
     if (request.address == m_address && request.source != m_address) {
         switch (static_cast<Command>(request.command)) {
             case Command::ping:
-                return cmd0_ping(request, response);
+                return ping(request, response);
             case Command::set_address:
-                return cmd1_set_address(request, response);
+                return set_address(request, response);
             case Command::reset_address:
-                return cmd2_reset_address(request, response);
+                return reset_address(request, response);
             case Command::set_status:
-                return cmd3_set_status(request, response);
+                return set_status(request, response);
             case Command::set_title:
-                break;
+                return set_title(request, response);
+            case Command::set_classification:
+                return set_classification(request, response);
             case Command::set_description:
-                break;
+                return set_description(request, response);
             case Command::set_counter:
-                break;
+                return set_counter(request, response);
+            case Command::get_counter:
+                return get_counter(request, response);
             default:
                 return false;
         }
@@ -25,11 +29,11 @@ bool App::handle_data_packet(const dataPacket& request, dataPacket& response) {
             case Command::set_address:
                 // only set address if input pin is true
                 if (true) {
-                    cmd1_set_address(request, response);
+                    set_address(request, response);
                 }
                 break;
             case Command::reset_address:
-                cmd2_reset_address(request, response);
+                reset_address(request, response);
                 break;
             default:
                 break;
@@ -39,57 +43,109 @@ bool App::handle_data_packet(const dataPacket& request, dataPacket& response) {
     return false;
 }
 
-bool App::cmd0_ping(const dataPacket& request, dataPacket& response) const {
+bool App::ping(const dataPacket& request, dataPacket& response) const {
+    init_response(response, request.source, Command::ping);
     Serial.println("ping");
-    response.source = m_address;
-    response.address = request.source;
-    response.command = request.command;
-    response.length = 0U;
     return true;
 }
 
-bool App::cmd1_set_address(const dataPacket& request, dataPacket& response) {
-    if (request.length != sizeof(request.cmd1_req)) {
+bool App::set_address(const dataPacket& request, dataPacket& response) {
+    if (request.length != sizeof(request.addr_data)) {
         return false;
     }
     Serial.print("set address ");
-    Serial.println(request.cmd1_req.address);
-    if (request.cmd1_req.address != 0U && request.cmd1_req.address != 255U) {
+    Serial.println(request.addr_data.address);
+
+    init_response(response, request.source, Command::set_address);
+    if (request.addr_data.address != cBroadcastAddress && request.addr_data.address != cInitializeAddress) {
         // Invalid address
-        m_address = request.cmd1_req.address;
+        m_address = request.addr_data.address;
     }
-    response.source = m_address;
-    response.address = request.source;
-    response.command = request.command;
-    response.length = sizeof(request.cmd1_resp);
-    response.cmd1_resp.address = m_address;
+    response.length = sizeof(request.addr_data);
+    response.addr_data.address = m_address;
     return true;
 }
 
-bool App::cmd2_reset_address(const dataPacket& request, dataPacket& response) {
+bool App::reset_address(const dataPacket& request, dataPacket& response) {
     Serial.println("reset address ");
-    set_my_address(255U);
-    response.source = m_address;
-    response.address = request.source;
-    response.command = request.command;
-    response.length = sizeof(request.cmd2_resp);
-    response.cmd2_resp.address = m_address;
+
+    set_my_address(cInitializeAddress);
+
+    init_response(response, request.source, Command::reset_address);
+    response.length = sizeof(request.addr_data);
+    response.addr_data.address = m_address;
     return true;
 }
 
-bool App::cmd3_set_status(const dataPacket& request, dataPacket& response) const {
-    if (request.length != sizeof(request.cmd3_req)) {
+bool App::set_status(const dataPacket& request, dataPacket& response) {
+    if (request.length != sizeof(request.status_data)) {
         return false;
     }
     Serial.print("set status ");
-    Serial.print(request.cmd3_req.status1);
+    Serial.print(request.status_data.status1);
     Serial.print(" ");
-    Serial.print(request.cmd3_req.status2);
+    Serial.print(request.status_data.status2);
     Serial.print(" ");
-    Serial.println(request.cmd3_req.status3);
-    response.source = m_address;
-    response.address = request.source;
-    response.command = request.command;
-    response.length = 0U;
+    Serial.println(request.status_data.status3);
+
+    m_display->set_status(request.status_data.status1, request.status_data.status2, request.status_data.status3);
+    m_status[0] = request.status_data.status1;
+    m_status[1] = request.status_data.status2;
+    m_status[2] = request.status_data.status3;
+
+    init_response(response, request.source, Command::set_status);
     return true;
+}
+
+bool App::set_title(const dataPacket& request, dataPacket& response) {
+    m_display->set_title(request.title_data.title_str.data(), request.length);
+    m_title = std::string(request.title_data.title_str.data(), request.length);
+
+    init_response(response, request.source, Command::set_title);
+    return true;
+}
+
+bool App::set_classification(const dataPacket& request, dataPacket& response) {
+    m_display->set_classification(request.class_data.class_str.data(), request.length);
+    m_classification = std::string(request.class_data.class_str.data(), request.length);
+
+    init_response(response, request.source, Command::set_classification);
+    return true;
+}
+
+bool App::set_description(const dataPacket& request, dataPacket& response) {
+    m_display->set_description(request.desc_data.desc_str.data(), request.length);
+    m_description = std::string(request.desc_data.desc_str.data(), request.length);
+
+    init_response(response, request.source, Command::set_description);
+    return true;
+}
+
+bool App::set_counter(const dataPacket& request, dataPacket& response) {
+    if (request.length != sizeof(request.counter_data)) {
+        return false;
+    }
+
+    m_display->set_counter(request.counter_data.counter, request.counter_data.maximum);
+    m_counter = request.counter_data.counter;
+    m_maximum = request.counter_data.maximum;
+
+    init_response(response, request.source, Command::set_counter);
+    return true;
+}
+
+bool App::get_counter(const dataPacket& request, dataPacket& response) const {
+    init_response(response, request.source, Command::get_counter);
+
+    response.length = 2U;
+    response.counter_data.counter = m_counter;
+    response.counter_data.maximum = m_maximum;
+    return true;
+}
+
+void App::increase_counter() {
+    if (m_counter < m_maximum) {
+        m_counter++;
+    }
+    m_display->set_counter(m_counter, m_maximum);
 }
