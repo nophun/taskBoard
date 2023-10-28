@@ -18,11 +18,14 @@ public:
 
     bool cmd0_ping(const dataPacket& request, dataPacket& response) const;
     bool cmd1_set_address(const dataPacket& request, dataPacket& response);
-    bool cmd2_set_status(const dataPacket& request, dataPacket& response) const;
+    bool cmd2_reset_address(const dataPacket& request, dataPacket& response);
+    bool cmd3_set_status(const dataPacket& request, dataPacket& response) const;
 
+    static constexpr uint8_t cBroadcastAddress = 0x00;
     enum class Command {
         ping,
         set_address,
+        reset_address,
         set_status,
         set_title,
         set_description,
@@ -30,6 +33,5 @@ public:
     };
 
 private:
-    static constexpr uint8_t cBroadcastAddress = 0x00;
     uint8_t m_address {255U};
 };

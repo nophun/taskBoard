@@ -42,27 +42,19 @@ void loop() {
             break;
         case 'a':
             packet_request.source = app.get_my_address();
-            packet_request.address = 0x00;
+            packet_request.address = App::cBroadcastAddress;
             packet_request.command = static_cast<uint8_t>(App::Command::ping);
             packet_request.length = 0x00;
             data.transmit(packet_request);
             break;
-        case 'b':
-            packet_request.source = app.get_my_address();
-            packet_request.address = 0x00;
-            packet_request.command = static_cast<uint8_t>(App::Command::set_address);
-            packet_request.length = 0x01;
-            packet_request.cmd1_req.address = 0x02;
-            data.transmit(packet_request);
-            break;
         case 'c':
             packet_request.source = app.get_my_address();
-            packet_request.address = 0x00;
+            packet_request.address = App::cBroadcastAddress;
             packet_request.command = static_cast<uint8_t>(App::Command::set_status);
             packet_request.length = 0x03;
-            packet_request.cmd2_req.status1 = 0x04;
-            packet_request.cmd2_req.status2 = 0x05;
-            packet_request.cmd2_req.status3 = 0x06;
+            packet_request.cmd3_req.status1 = 0x04;
+            packet_request.cmd3_req.status2 = 0x05;
+            packet_request.cmd3_req.status3 = 0x06;
             data.transmit(packet_request);
             break;
         case 'd':
@@ -70,9 +62,24 @@ void loop() {
             packet_request.address = 0x02;
             packet_request.command = static_cast<uint8_t>(App::Command::set_status);
             packet_request.length = 0x03;
-            packet_request.cmd2_req.status1 = 0x07;
-            packet_request.cmd2_req.status2 = 0x08;
-            packet_request.cmd2_req.status3 = 0x09;
+            packet_request.cmd3_req.status1 = 0x07;
+            packet_request.cmd3_req.status2 = 0x08;
+            packet_request.cmd3_req.status3 = 0x09;
+            data.transmit(packet_request);
+            break;
+        case 's':
+            packet_request.source = app.get_my_address();
+            packet_request.address = App::cBroadcastAddress;
+            packet_request.command = static_cast<uint8_t>(App::Command::set_address);
+            packet_request.length = 0x01;
+            packet_request.cmd1_req.address = 0x02;
+            data.transmit(packet_request);
+            break;
+        case 'r':
+            packet_request.source = app.get_my_address();
+            packet_request.address = App::cBroadcastAddress;
+            packet_request.command = static_cast<uint8_t>(App::Command::reset_address);
+            packet_request.length = 0x00;
             data.transmit(packet_request);
             break;
 

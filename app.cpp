@@ -7,8 +7,10 @@ bool App::handle_data_packet(const dataPacket& request, dataPacket& response) {
                 return cmd0_ping(request, response);
             case Command::set_address:
                 return cmd1_set_address(request, response);
+            case Command::reset_address:
+                return cmd2_reset_address(request, response);
             case Command::set_status:
-                return cmd2_set_status(request, response);
+                return cmd3_set_status(request, response);
             case Command::set_title:
                 break;
             case Command::set_description:
@@ -18,12 +20,21 @@ bool App::handle_data_packet(const dataPacket& request, dataPacket& response) {
             default:
                 return false;
         }
-    } else if (request.address == 0x00) {
-        if (request.address == cBroadcastAddress &&
-            static_cast<Command>(request.command) == Command::set_address &&
-            true) {
-            return cmd1_set_address(request, response);
+    } else if (request.address == cBroadcastAddress) {
+        switch (static_cast<Command>(request.command)) {
+            case Command::set_address:
+                // only set address if input pin is true
+                if (true) {
+                    cmd1_set_address(request, response);
+                }
+                break;
+            case Command::reset_address:
+                cmd2_reset_address(request, response);
+                break;
+            default:
+                break;
         }
+        return false; // don't respond to broadcast
     }
     return false;
 }
@@ -55,16 +66,27 @@ bool App::cmd1_set_address(const dataPacket& request, dataPacket& response) {
     return true;
 }
 
-bool App::cmd2_set_status(const dataPacket& request, dataPacket& response) const {
-    if (request.length != sizeof(request.cmd2_req)) {
+bool App::cmd2_reset_address(const dataPacket& request, dataPacket& response) {
+    Serial.println("reset address ");
+    set_my_address(255U);
+    response.source = m_address;
+    response.address = request.source;
+    response.command = request.command;
+    response.length = sizeof(request.cmd2_resp);
+    response.cmd2_resp.address = m_address;
+    return true;
+}
+
+bool App::cmd3_set_status(const dataPacket& request, dataPacket& response) const {
+    if (request.length != sizeof(request.cmd3_req)) {
         return false;
     }
     Serial.print("set status ");
-    Serial.print(request.cmd2_req.status1);
+    Serial.print(request.cmd3_req.status1);
     Serial.print(" ");
-    Serial.print(request.cmd2_req.status2);
+    Serial.print(request.cmd3_req.status2);
     Serial.print(" ");
-    Serial.println(request.cmd2_req.status3);
+    Serial.println(request.cmd3_req.status3);
     response.source = m_address;
     response.address = request.source;
     response.command = request.command;

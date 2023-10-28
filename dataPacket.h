@@ -11,13 +11,17 @@ struct cmd1_resp {
     uint8_t address;
 };
 
-struct cmd2_req {
+struct cmd2_resp {
+    uint8_t address;
+};
+
+struct cmd3_req {
     uint8_t status1;
     uint8_t status2;
     uint8_t status3;
 };
 
-struct cmd2_resp {
+struct cmd3_resp {
     uint8_t status1;
     uint8_t status2;
     uint8_t status3;
@@ -30,11 +34,12 @@ struct dataPacket {
     uint8_t source;
     uint8_t address;
     uint8_t command;
-    uint8_t length;     // 0-8
+    uint8_t length;
     union {
         std::array<uint8_t, cMaxDataSize> data;
-        struct cmd1_req cmd1_req;  struct cmd1_resp cmd1_resp;
-        struct cmd2_req cmd2_req;  struct cmd2_resp cmd2_resp;
+        struct cmd1_req cmd1_req;   struct cmd1_resp cmd1_resp;
+                                    struct cmd2_resp cmd2_resp;
+        struct cmd3_req cmd3_req;   struct cmd3_resp cmd3_resp;
     };
 
     void clear() {
