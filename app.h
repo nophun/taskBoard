@@ -28,12 +28,11 @@ public:
     App& operator=(App&&) = delete;
 
     bool handle_data_packet(const dataPacket& request, dataPacket& response);
-    void set_my_address(uint8_t address) {
-        m_address = address;
-    }
-    uint8_t get_my_address(void) const {
-        return m_address;
-    }
+    bool handle_directed_msg(const dataPacket& request, dataPacket& response);
+    bool handle_broadcast_msg(const dataPacket& request, dataPacket& response);
+
+    void set_my_address(uint8_t address) { m_address = address; }
+    uint8_t get_my_address(void) const { return m_address; }
     void init_response(dataPacket& response, uint8_t src_address, Command command) const {
         response.init(m_address, src_address, static_cast<uint8_t>(command));
     }

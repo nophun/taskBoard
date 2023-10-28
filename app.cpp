@@ -2,45 +2,54 @@
 
 bool App::handle_data_packet(const dataPacket& request, dataPacket& response) {
     if (request.address == m_address && request.source != m_address) {
-        switch (static_cast<Command>(request.command)) {
-            case Command::ping:
-                return ping(request, response);
-            case Command::set_address:
-                return set_address(request, response);
-            case Command::reset_address:
-                return reset_address(request, response);
-            case Command::set_status:
-                return set_status(request, response);
-            case Command::set_title:
-                return set_title(request, response);
-            case Command::set_classification:
-                return set_classification(request, response);
-            case Command::set_description:
-                return set_description(request, response);
-            case Command::set_counter:
-                return set_counter(request, response);
-            case Command::get_counter:
-                return get_counter(request, response);
-            default:
-                return false;
-        }
+        handle_directed_msg(request, response);
     } else if (request.address == cBroadcastAddress) {
-        switch (static_cast<Command>(request.command)) {
-            case Command::set_address:
-                // only set address if input pin is true
-                if (true) {
-                    set_address(request, response);
-                }
-                break;
-            case Command::reset_address:
-                reset_address(request, response);
-                break;
-            default:
-                break;
-        }
-        return false; // don't respond to broadcast
+        handle_broadcast_msg(request, response);
     }
     return false;
+}
+
+bool App::handle_directed_msg(const dataPacket& request, dataPacket& response) {
+    switch (static_cast<Command>(request.command)) {
+    case Command::ping:
+        return ping(request, response);
+    case Command::set_address:
+        return set_address(request, response);
+    case Command::reset_address:
+        return reset_address(request, response);
+    case Command::set_status:
+        return set_status(request, response);
+    case Command::set_title:
+        return set_title(request, response);
+    case Command::set_classification:
+        return set_classification(request, response);
+    case Command::set_description:
+        return set_description(request, response);
+    case Command::set_counter:
+        return set_counter(request, response);
+    case Command::get_counter:
+        return get_counter(request, response);
+    default:
+        break;
+    }
+    return false;
+}
+
+bool App::handle_broadcast_msg(const dataPacket& request, dataPacket& response) {
+    switch (static_cast<Command>(request.command)) {
+    case Command::set_address:
+        // only set address if input pin is true
+        if (true) {
+            set_address(request, response);
+        }
+        break;
+    case Command::reset_address:
+        reset_address(request, response);
+        break;
+    default:
+        break;
+    }
+    return false; // don't respond to broadcast
 }
 
 bool App::ping(const dataPacket& request, dataPacket& response) const {
