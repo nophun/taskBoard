@@ -107,24 +107,24 @@ bool App::set_status(const dataPacket& request, dataPacket& response) {
 }
 
 bool App::set_title(const dataPacket& request, dataPacket& response) {
-    m_display->set_title(request.title_data.title_str.data(), request.length);
     m_title = std::string(request.title_data.title_str.data(), request.length);
+    m_display->set_title(m_title);
 
     init_response(response, request.source, Command::set_title);
     return true;
 }
 
 bool App::set_classification(const dataPacket& request, dataPacket& response) {
-    m_display->set_classification(request.class_data.class_str.data(), request.length);
     m_classification = std::string(request.class_data.class_str.data(), request.length);
+    m_display->set_classification(m_classification);
 
     init_response(response, request.source, Command::set_classification);
     return true;
 }
 
 bool App::set_description(const dataPacket& request, dataPacket& response) {
-    m_display->set_description(request.desc_data.desc_str.data(), request.length);
     m_description = std::string(request.desc_data.desc_str.data(), request.length);
+    m_display->set_description(m_description);
 
     init_response(response, request.source, Command::set_description);
     return true;

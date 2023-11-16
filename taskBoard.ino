@@ -6,8 +6,9 @@
 #include "app.h"
 #include "display.h"
 
+EPDTYPE epd(EPDPANEL(EPD_CS, EPD_DC, EPD_RST, EPD_BUSY));
 DataWrapper data;
-Display display;
+Display display(&epd);
 App app(&display);
 static dataPacket packet_request = {};
 static dataPacket packet_response = {};
@@ -19,10 +20,15 @@ void setup() {
     Serial.begin(115200);
     Serial1.begin(115200, SERIAL_8N1);
     Serial.println("start");
+
+    display.init();
+
+    // set "Hello" as title to display
+    display.set_title("Hello");
 }
 
 void loop() {
-    uint8_t rcv;
+    static uint8_t rcv;
 
     if (Serial1.available() && data.receive(static_cast<uint8_t>(Serial1.read()))) {
         if (data.get_packet(packet_request)) {
