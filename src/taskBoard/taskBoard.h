@@ -1,6 +1,8 @@
 #pragma once
 
 #include <Arduino.h>
+#include <GxEPD2_BW.h>
+#include <GxEPD2_3C.h>
 
 class TaskBoard {
 public:
@@ -13,9 +15,9 @@ public:
 
     bool check_incoming_byte();
     void check_timeout();
-    void show_task();
     const char *get_title() { return m_buffer.title.data; }
     const char *get_desc() { return m_buffer.desc.data; }
+    static void show_task(String title, String desc);
     static String limit_title(const String& raw_title);
 
 private:

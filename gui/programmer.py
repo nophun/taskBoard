@@ -2,6 +2,7 @@ from tkinter import *
 from tkinter.ttk import Label, Style, Treeview
 import serial.tools.list_ports
 import serial
+from PIL import Image, ImageTk
 
 class Task():
     @staticmethod
@@ -121,6 +122,9 @@ class Programmer():
 
 if __name__ == "__main__":
     form_window = Tk()
+    icon = ImageTk.PhotoImage(file = 'Yuster_logo_128px.png')
+    form_window.wm_iconphoto(False, icon)
+
     T = Task()
     P = Programmer(form_window)
     form_window.mainloop()

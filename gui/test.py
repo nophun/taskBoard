@@ -21,9 +21,10 @@ def clean_text(text):
 
 
 # title = "............................"
-title = "jmm..a.mmm123"
-# title = "Indigö updäte"
-desc = "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type a"
+# title = "jmm..a.mmm123"
+title = "HART Aout"
+# desc = "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type a"
+desc = "Fiksaa POR, jos loop current on\nfixed modessa. Ei pitäisi seurata\nanalog output -arvoa, vaan aina\nPV:tä"
 title = clean_text(title)
 desc = clean_text(desc)
 bts = [0]

@@ -3,14 +3,13 @@
 #define ENABLE_GxEPD2_GFX 0
 
 #include <Arduino.h>
-#include <GxEPD2_BW.h>
-#include <GxEPD2_3C.h>
-#include "fonts/tahoma8pt7b.h"
-#include "fonts/Pockota_Bold16pt7b.h"
+#include <SPIFFS.h>
 #include "taskBoard.h"
 #include "bsp.h"
 #include "oled.h"
 #include "helpers.h"
+#include "fonts/tahoma8pt7b.h"
+#include "fonts/Pockota_Bold16pt7b.h"
 
 #include "taskBoard_wifi.h"
 
@@ -37,6 +36,10 @@ void setup() {
     Serial.begin(115200);
     Serial.println("Start");
 
+    if (SPIFFS.begin(true)) {
+        Serial.println("Filesystem mounted OK");
+    }
+
     setup_oled();
 
     if (setup_wifi()) {
@@ -46,6 +49,8 @@ void setup() {
         Serial.println(Helper::convert_IP(WiFi.localIP()).c_str());
         
         server.on("/", HTTPHandlers::handle_root);
+        server.on("/program", HTTPHandlers::handle_program);
+        server.onNotFound(HTTPHandlers::handle_file);
         server.begin();
         
         oled.set_header(Helper::convert_IP(WiFi.localIP()).c_str(), Alignment::Center);
@@ -59,7 +64,7 @@ void setup() {
 
 void loop() {
     if (taskboard.check_incoming_byte()) {
-        taskboard.show_task();
+        taskboard.show_task(taskboard.get_title(), taskboard.get_desc());
     }
 
     taskboard.check_timeout();
@@ -159,7 +164,7 @@ String TaskBoard::limit_title(const String& raw_title) {
     do {
         limited_title = raw_title.substring(0, len);
         display.getTextBounds(limited_title, 0, 0, &tbx, &tby, &tbw, &tbh);
-        Serial.println("Title Text bounds: " + String(tbw) + " " + String(tbh) + ", len " + String(len));
+        Serial.println("Title '" + limited_title + "' bounds: " + String(tbx) + " " + String(tby) + " " + String(tbw) + " " + String(tbh) + ", len " + String(len));
         
         if (tbh > line_height_limit) {
             len--;
@@ -174,34 +179,35 @@ String TaskBoard::limit_title(const String& raw_title) {
     return limited_title;
 }
 
-void TaskBoard::show_task() {
+void TaskBoard::show_task(String title, String desc) {
     int16_t tbx, tby;
     uint16_t tbw, tbh;
-    String title = TaskBoard::limit_title(String(get_title()));
-    String desc = String(get_desc());
-    Serial.println("Title: " + title + "\nDesc: "+ desc);
 
-    m_display->init(115200, true, 50, false);
-    m_display->setRotation(1);
-    m_display->setFont(&Pockota_Bold16pt7b);
-    m_display->getTextBounds(desc, 0, 56, &tbx, &tby, &tbw, &tbh);
+    display.init(115200, true, 50, false);
+    display.setRotation(1);
+
+    String limited_title = TaskBoard::limit_title(title);
+    Serial.println("Title: " + limited_title + "\nDesc: "+ desc);
+
+    display.setFont(&Pockota_Bold16pt7b);
+    display.getTextBounds(desc, 0, 56, &tbx, &tby, &tbw, &tbh);
     Serial.println("desc Text bounds: " + String(tbx) + " " + String(tby) + " " + String(tbw) + " " + String(tbh));
-    m_display->getTextBounds(title, 0, 0, &tbx, &tby, &tbw, &tbh);
+    display.getTextBounds(limited_title, 0, 0, &tbx, &tby, &tbw, &tbh);
     Serial.println("title Text bounds: " + String(tbx) + " " + String(tby) + " " + String(tbw) + " " + String(tbh));
-    m_display->setFullWindow();
-    m_display->firstPage();
+    display.setFullWindow();
+    display.firstPage();
     do {
-        m_display->fillScreen(GxEPD_WHITE);
+        display.fillScreen(GxEPD_WHITE); 
 
-        m_display->setTextColor(m_display->epd2.hasColor ? GxEPD_RED : GxEPD_BLACK);
-        m_display->setCursor(-tbx + (250 - tbw) / 2, 23);
-        m_display->setFont(&Pockota_Bold16pt7b);
-        m_display->print(title);
+        display.setTextColor(display.epd2.hasColor ? GxEPD_RED : GxEPD_BLACK);
+        display.setCursor(-tbx + (250 - tbw) / 2, 23);
+        display.setFont(&Pockota_Bold16pt7b);
+        display.print(limited_title);
 
-        m_display->setTextColor(GxEPD_BLACK);
-        m_display->setCursor(0, 60);
-        m_display->setFont(&tahoma8pt7b);
-        m_display->print(desc);
+        display.setTextColor(GxEPD_BLACK);
+        display.setCursor(0, 60);
+        display.setFont(&tahoma8pt7b);
+        display.print(desc);
     }
     while (display.nextPage());
 }

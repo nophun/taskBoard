@@ -12,11 +12,15 @@ public:
 
   WebServer *get_server(void) { return m_server; }
   static void handle_root();
+  static void handle_file();
+  static void handle_info();
+  static void handle_program();
   static void handle_generic_args();
   static HTTPHandlers *get() { return m_handler; }
 
 private:
-  void send_response(uint8_t code, String message);
+  static void send_response(uint8_t code, String message);
+  static bool load_from_fs(WebServer *server);
   
   WebServer *m_server {nullptr};
   inline static HTTPHandlers *m_handler {nullptr};
