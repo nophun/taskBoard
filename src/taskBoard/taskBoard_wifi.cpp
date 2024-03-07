@@ -5,6 +5,7 @@
 
 WebServer server(MY_SERVER_PORT);
 HTTPHandlers handler(&server);
+HTTPUpdateServer httpUpdater;
 
 bool tryConnect() {
     int counter = 0;
@@ -24,20 +25,31 @@ bool tryConnect() {
 }
 
 bool setup_wifi() {
+    Serial.println("Connecting to WiFi (" + String(WIFI_SSID) + ")");
+    WiFi.disconnect(true);
+    WiFi.mode(WIFI_STA);
+    WiFi.begin(WIFI_SSID, WPA2_AUTH_PEAP, EAP_ID, EAP_USERNAME, EAP_PASSWORD);
+    if (tryConnect()) {
+        return true;
+    }
+    Serial.println("\nWiFi connect failed");
+
+    Serial.println("Trying default settings (ESP_AP)");
     WiFi.disconnect(true);
     WiFi.mode(WIFI_STA);
     WiFi.begin("ESP_AP", "winteriscoming");
-
-    if (!tryConnect()) {
-        Serial.print("\nWiFi connect failed\r\n");
-        Serial.print("Trying default settings\r\n");
-        WiFi.mode(WIFI_STA);
-        WiFi.begin(WIFI_SSID, WPA2_AUTH_PEAP, EAP_ID, EAP_USERNAME, EAP_PASSWORD);
-        if (!tryConnect()) {
-            Serial.print("\nWiFi connect failed\r\n");
-            return false;
-        }
+    if (tryConnect()) {
+        return true;
     }
+    Serial.println("\nWiFi connect failed");
+    return false;
+}
 
-    return true;
+void config_server() {
+    server.on("/", HTTPHandlers::handle_root);
+    server.on("/program", HTTPHandlers::handle_program);
+    server.onNotFound(HTTPHandlers::handle_file);
+    server.begin();
+
+    httpUpdater.setup(&server, UPDT_USER, UPDT_PASW);
 }

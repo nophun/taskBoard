@@ -42,22 +42,17 @@ void setup() {
     setup_oled();
 
     if (setup_wifi()) {
-        Serial.println("");
-        Serial.println("WiFi connected");
+        Serial.println("\nWiFi connected");
         Serial.println("IP address: ");
         Serial.println(Helper::convert_IP(WiFi.localIP()).c_str());
         
-        server.on("/", HTTPHandlers::handle_root);
-        server.on("/program", HTTPHandlers::handle_program);
-        server.onNotFound(HTTPHandlers::handle_file);
-        server.begin();
+        config_server();
         
         oled.set_header(Helper::convert_IP(WiFi.localIP()).c_str(), Alignment::Center);
         oled.set_value("READY");
     } else {
         oled.set_value("NO WIFI");
     }
- 
     oled.refresh();
 }
 
@@ -65,12 +60,13 @@ void loop() {
     if (taskboard.check_incoming_byte()) {
         taskboard.show_task(taskboard.get_title(), taskboard.get_desc());
     }
-
     taskboard.check_timeout();
 
     if (WiFi.status() == WL_CONNECTED) {
         server.handleClient();
     }
+
+    oled.refresh();
 
     delay(1);
 }
@@ -83,6 +79,11 @@ bool TaskBoard::check_incoming_byte() {
 
         switch(m_serial_rcv_state) {
             case SerialRcvState::TYPE:
+                if (incomingByte == '1') {
+                    strcpy(m_buffer.title.data, "Title");
+                    strcpy(m_buffer.desc.data, "Description");
+                    return true;
+                }
                 m_buffer.type = static_cast<msg::MsgType>(incomingByte);
                 m_data_crc = incomingByte;
                 m_serial_rcv_state = SerialRcvState::TASK_LEN;
