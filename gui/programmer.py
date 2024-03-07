@@ -40,7 +40,9 @@ class Task():
         crc = Task.calc_crc(bytestream)
         bytestream += crc.to_bytes(1)
 
-        ser = serial.Serial(port=com, baudrate=115200, bytesize=8, parity='N', stopbits=1, timeout=2)
+        ser = serial.Serial(port=com, baudrate=115200, bytesize=8, parity='N', stopbits=1, timeout=2, dsrdtr=None)
+        ser.setRTS(False)
+        ser.setDTR(False)
         ser.write(bytestream)
         print(bytes(bytestream))
 
