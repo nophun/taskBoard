@@ -76,12 +76,12 @@ class Programmer():
         self.T.insert(index=0, string="Title") 
 
         # Description entry
-        self.D = Text(self.form_window, height=4, width=29, bd=0, bg="#cccccc", fg="#222222", font=("Tahoma", 11))
+        self.D = Text(self.form_window, height=4, width=29, bd=0, bg="#cccccc", fg="#222222", font=("Vaisala Sans Light", 10))
         self.D.place(x=33, y=42, height=74, width=232)
         self.D.insert(1.0, "Description") 
 
         # Program button
-        self.B = Button(self.form_window, command=self.create_task, text="Create task", font=("Pockota Bold", 12, "bold"))
+        self.B = Button(self.form_window, command=self.create_task, text="Create task", font=("Vaisala Sans Medium", 12, "bold"))
         self.B.place(x=114, y=130, height=36, width=160)
 
         # Preselect previously selected COM port if it is still available

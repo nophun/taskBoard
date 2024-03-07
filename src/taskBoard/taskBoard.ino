@@ -8,10 +8,9 @@
 #include "bsp.h"
 #include "oled.h"
 #include "helpers.h"
-#include "fonts/tahoma8pt7b.h"
-#include "fonts/Pockota_Bold16pt7b.h"
-
 #include "taskBoard_wifi.h"
+#include "fonts/Pockota_Bold16pt7b.h"
+#include "fonts/VaisalaSans_Light7pt7b.h"
 
 OLED oled(OLED_ADDRESS, 5*60);
 // 2.13'' EPD Module
@@ -206,7 +205,7 @@ void TaskBoard::show_task(String title, String desc) {
 
         display.setTextColor(GxEPD_BLACK);
         display.setCursor(0, 60);
-        display.setFont(&tahoma8pt7b);
+        display.setFont(&VaisalaSans_Light7pt7b);
         display.print(desc);
     }
     while (display.nextPage());

@@ -2,6 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8" />
+    <link rel="icon" type="image/png" href="Yuster_logo_128px.png" />
     <script>
 
 function clean_string(input) {
@@ -46,6 +47,12 @@ function Program() {
 }
     </script>
     <style>
+        @font-face {  
+            src: url(VaisalaSans-Light.woff2) format("truetype");
+        }
+        @font-face {  
+            src: url(VaisalaSans-Medium.woff2) format("truetype");
+        }
         table {
             text-align: center;
         }
@@ -59,7 +66,7 @@ function Program() {
             padding-top: 1em;
         }
         h1 {
-            font-family: "Tahoma";
+            font-family: "Vaisala Sans Medium";
             font-size: 28px;
         }
         textarea {
@@ -75,8 +82,8 @@ function Program() {
             text-align: center;
         }
         textarea#desc {
-            font-family: 'Tahoma';
-            font-size: 17px;
+            font-family: 'Vaisala Sans Light';
+            font-size: 15px;
             resize: none;
         }
         input#create {
@@ -96,8 +103,8 @@ function Program() {
         <td><h1>TaskBoard</h1></td>
     </tr>
     <tr class='input_area'><td colspan="2">
-        <textarea id='title' name='title' rows='1' cols='15'>Title</textarea><br>
-        <textarea id='desc' name='desc' rows='4' cols='31'>Description</textarea>
+        <textarea id='title' name='title' rows='1' cols='14'>Title</textarea><br>
+        <textarea id='desc' name='desc' rows='4' cols='34'>Description</textarea>
     </td></tr>
     <tr class='submit_button'><td colspan="2"><input id="create" type='submit' value='Create task' onclick='Program()'></input></td></tr>
 </tbody></table>
