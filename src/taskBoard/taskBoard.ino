@@ -84,6 +84,7 @@ bool TaskBoard::check_incoming_byte() {
                     strcpy(m_buffer.desc.data, "Description");
                     return true;
                 }
+                memset(&m_buffer, 0, sizeof(m_buffer));
                 m_buffer.type = static_cast<msg::MsgType>(incomingByte);
                 m_data_crc = incomingByte;
                 m_serial_rcv_state = SerialRcvState::TASK_LEN;
