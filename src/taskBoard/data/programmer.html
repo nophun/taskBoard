@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/png" href="Yuster_logo_128px.png" />
+    <script>
+
+function clean_string(input) {
+    console.log(input.search('ä'));
+    console.log('clean_string');
+    for (c of input) {
+        console.log(c=='ä');
+    }
+    return input.replaceAll('å', 'a')
+                .replaceAll('ä', 'a')
+                .replaceAll('ö', 'o')
+                .replaceAll('Å', 'A')
+                .replaceAll('Ä', 'A')
+                .replaceAll('Ö', 'O');
+}
+// Make a GET request
+function Program() {
+    var host = window.location.origin;
+    var title = clean_string(document.getElementById('title').value);
+    var desc = clean_string(document.getElementById('desc').value);
+    const url = new URL(host + '/program');
+    url.searchParams.set('title', title);
+    url.searchParams.set('desc', desc);
+    console.log(host);
+    console.log(title);
+    console.log(desc);
+    console.log(url.toString());
+    fetch(url.toString())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            console.log(response);
+            return response.body;
+        })
+        .then(data => {
+            console.log(data);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+}
+    </script>
+    <style>
+        @font-face {  
+            src: url(VaisalaSans-Light.woff2) format("truetype");
+        }
+        @font-face {  
+            src: url(VaisalaSans-Medium.woff2) format("truetype");
+        }
+        table {
+            text-align: center;
+        }
+/*        table td {
+            border: 1px solid black;
+        }*/
+        tr.input_area td {
+            background: #cccccc;
+        }
+        tr.submit_button td {
+            padding-top: 1em;
+        }
+        h1 {
+            font-family: "Vaisala Sans Medium";
+            font-size: 28px;
+        }
+        textarea {
+            overflow: hidden;
+            border-width: 0px;
+            background: #cccccc;
+            color: #222222;
+        }
+        textarea#title {
+            font-family: 'Pockota';
+            font-size: 32px;
+            resize: none;
+            text-align: center;
+        }
+        textarea#desc {
+            font-family: 'Vaisala Sans Light';
+            font-size: 15px;
+            resize: none;
+        }
+        input#create {
+            font-family: "Tahoma";
+            font-size: 18px;
+        }
+
+    </style>
+</head>
+<body>
+
+<table><tbody>
+    <tr>
+        <td>
+            <img src="Yuster_logo_128px.png" alt="Yuster logo" width="50">
+        </td>
+        <td><h1>TaskBoard</h1></td>
+    </tr>
+    <tr class='input_area'><td colspan="2">
+        <textarea id='title' name='title' rows='1' cols='14'>Title</textarea><br>
+        <textarea id='desc' name='desc' rows='4' cols='34'>Description</textarea>
+    </td></tr>
+    <tr class='submit_button'><td colspan="2"><input id="create" type='submit' value='Create task' onclick='Program()'></input></td></tr>
+</tbody></table>
+
+</body>
+</html>
