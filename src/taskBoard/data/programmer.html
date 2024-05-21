@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8" />
-    <link rel="icon" type="image/png" href="Yuster_logo_128px.png" />
+    <link rel="icon" type="image/png" href="Yuster_logo.webp" />
     <script>
 
 function clean_string(input) {
@@ -69,6 +69,10 @@ function Program() {
             font-family: "Vaisala Sans Medium";
             font-size: 28px;
         }
+        h3 {
+            font-family: 'Trebuchet MS', sans-serif;
+            font-size: 16px;
+        }
         textarea {
             overflow: hidden;
             border-width: 0px;
@@ -98,7 +102,7 @@ function Program() {
 <table><tbody>
     <tr>
         <td>
-            <img src="Yuster_logo_128px.png" alt="Yuster logo" width="50">
+            <img src="Yuster_logo.webp" alt="Yuster logo" width="50">
         </td>
         <td><h1>TaskBoard</h1></td>
     </tr>
@@ -107,6 +111,11 @@ function Program() {
         <textarea id='desc' name='desc' rows='4' cols='34'>Description</textarea>
     </td></tr>
     <tr class='submit_button'><td colspan="2"><input id="create" type='submit' value='Create task' onclick='Program()'></input></td></tr>
+    <tr>
+        <td colspan="2">
+            <h3>© Yuster electronics 2024</h3>
+        </td>
+    </tr>
 </tbody></table>
 
 </body>
