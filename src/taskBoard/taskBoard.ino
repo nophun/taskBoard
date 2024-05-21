@@ -3,7 +3,7 @@
 #define ENABLE_GxEPD2_GFX 0
 
 #include <Arduino.h>
-#include <SPIFFS.h>
+#include <LittleFS.h>
 #include "taskBoard.h"
 #include "bsp.h"
 #include "oled.h"
@@ -35,7 +35,7 @@ void setup() {
     Serial.begin(115200);
     Serial.println("Start");
 
-    if (SPIFFS.begin(true)) {
+    if (LittleFS.begin(true)) {
         Serial.println("Filesystem mounted OK");
     }
 
