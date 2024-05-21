@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include <SPIFFS.h>
+#include <LittleFS.h>
 #include "HTTP_handlers.h"
 #include "helpers.h"
 #include "taskBoard.h"
@@ -137,7 +137,7 @@ bool HTTPHandlers::load_from_fs(WebServer *server) {
     else if (path.endsWith(".xml")) dataType = "text/xml";
     else if (path.endsWith(".pdf")) dataType = "application/pdf";
     else if (path.endsWith(".zip")) dataType = "application/zip";
-    File dataFile = SPIFFS.open(path.c_str(), "r");
+    File dataFile = LittleFS.open(path.c_str(), "r");
     if (server->hasArg("download")) {
         dataType = "application/octet-stream";
     }
