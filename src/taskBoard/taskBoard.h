@@ -11,16 +11,18 @@ public:
     TaskBoard(TaskBoard&&) = delete;
     TaskBoard& operator=(const TaskBoard&) = delete;
     TaskBoard& operator=(TaskBoard&&) = delete;
-    ~TaskBoard();
+    ~TaskBoard() = default;
 
     bool check_incoming_byte();
     void check_timeout();
     const char *get_title() { return m_buffer.title.data; }
     const char *get_desc() { return m_buffer.desc.data; }
-    static void show_task(String title, String desc);
+    static void show_task(String &title, String &desc);
     static String limit_title(const String& raw_title);
-
+    static void store_wifi_config(String config);
+    static String read_wifi_config();
 private:
+    inline static const String wificonfig_filename = "/wificonfig";
     enum class SerialRcvState {
         TYPE,
         TASK_LEN,

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/png" href="Yuster_logo.webp" />
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<table class="center" width="276px">
+    <tr>
+        <td>
+            <img src="Yuster_logo.webp" alt="Yuster logo" width="50">
+        </td>
+        <td><h1>Setup WiFi</h1></td>
+    </tr>
+    <form action="wificonfig" method="post">
+        <tr>
+            <td width="100px">
+                <label for="ssid">SSID:</label>
+            </td>
+            <td>
+                <input type="text" pattern="[a-zA-Z0-9!@#$%^*_|]{6,25}" id="ssid" name="ssid">
+            </td>
+        </tr>
+        <tr>
+            <td width="100px">
+                <label for="auth">Security:</label>
+            </td>
+            <td>
+                <select name="auth" id="auth"> 
+                    <option value="n">No authentication</option> 
+                    <option value="p">WPA2-Personal</option> 
+                    <option value="e">WPA2-Enterprise</option> 
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td width="100px">
+                <label for="user">Username:</label>
+            </td>
+            <td>
+                <input type="text" pattern="[a-zA-Z0-9!@#$%^*_|]{6,25}" id="user" name="user">
+            </td>
+        </tr>
+        <tr>
+            <td width="100px">
+                <label for="pass">Passcode:</label>
+            </td>
+            <td>
+                <input type="password" id="pass" name="pass">
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <input type="submit" value="Config">
+            </td>
+        </tr>
+    </form>
+</table>
+</body>
+</html>

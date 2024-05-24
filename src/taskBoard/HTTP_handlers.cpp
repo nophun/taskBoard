@@ -1,149 +1,145 @@
 #include <Arduino.h>
 #include <LittleFS.h>
+#include <WiFi.h>
 #include "HTTP_handlers.h"
 #include "helpers.h"
 #include "taskBoard.h"
 
 extern int serialNumber;
 extern int typeNumber;
+using namespace httpsserver;
 
-void HTTPHandlers::send_response(uint8_t code, String message) {
-    WebServer *server = HTTPHandlers::get()->get_server();
-    server->sendHeader("Access-Control-Allow-Origin", "*");
-    //Response to the HTTP request
-    server->send(code, "text/plain", message);
-}
+static const std::string contentTypes[][2] = {
+    {".css",  "text/css"},
+    {".gif",  "image/gif"},
+    {".htm",  "text/html"},
+    {".html", "text/html"},
+    {".ico",  "image/x-icon"},
+    {".jpg",  "image/jpg"},
+    {".js",   "application/javascript"},
+    {".pdf",  "application/pdf"},
+    {".png",  "image/png"},
+    {".txt",  "text/plain"},
+    {".xml",  "text/xml"},
+    {".zip",  "application/zip"},
+    {"", ""}
+};
 
-void HTTPHandlers::handle_root() {
-    WebServer *server = HTTPHandlers::get()->get_server();
-    server->sendHeader("Location", "/programmer.html", true);   //Redirect to our html web page
-    server->send(302, "text/plane", "");
+void HTTPHandlers::handle_root(HTTPRequest *req, HTTPResponse *res) {
     Serial.println("handle_root");
+    res->setHeader("Location", "/programmer.html");
+    res->setStatusCode(302);
+    res->setStatusText("Found");
+    res->setHeader("Content-Type", "text/plain");
+    res->println("");
 }
 
-void HTTPHandlers::handle_file() {
-    WebServer *server = HTTPHandlers::get()->get_server();
-    Serial.println("handle_file: " + server->uri());
-    if (load_from_fs(server)) return;
-    String message = "File Not Detected\n\n";
-    message += "URI: ";
-    message += server->uri();
-    message += "\nMethod: ";
-    message += (server->method() == HTTP_GET)?"GET":"POST";
-    message += "\nArguments: ";
-    message += server->args();
-    message += "\n";
-    for (uint8_t i=0; i<server->args(); i++){
-        message += " NAME:"+server->argName(i) + "\n VALUE:" + server->arg(i) + "\n";
+void HTTPHandlers::handle_insecure_root(HTTPRequest *req, HTTPResponse *res) {
+    Serial.println("handle_insecure_root");
+    String address = String("https://") + Helper::convert_IP(WiFi.localIP());
+    Serial.println(address);
+    res->setHeader("Location", address.c_str());
+    res->setStatusCode(302);
+    res->setStatusText("Found");
+    res->setHeader("Content-Type", "text/plain");
+    res->println("");
+}
+
+void HTTPHandlers::handle_wifi_config(HTTPRequest *req, HTTPResponse *res) {
+    Serial.println("handle_wifi_config");
+    Serial.println(req->getRequestString().c_str());
+    res->setStatusCode(200);
+    res->setStatusText("Found");
+    res->setHeader("Content-Type", "text/plain");
+    res->println("OK");
+
+    char query[256] = {};
+    size_t len = req->getContentLength();
+    req->readChars(query, len);
+    query[len] = '\0';
+
+    // Serial.println("Config: (" + String(len) + ") " + String(query));
+
+    std::map<String, String> params;
+    Helper::parse_query_string(query, &params);
+    for (auto const& param : params) {
+        Serial.print(param.first);
+        Serial.print(": ");
+        Serial.println(param.second);
     }
-    server->send(404, "text/plain", message);
+
+    TaskBoard::store_wifi_config(query);
 }
 
-void HTTPHandlers::handle_info() {
-    uint8_t mac[6]; 
-    WiFi.macAddress(mac);
-    String macStr = Helper::convert_MAC(mac);
-
-    String ipStr = Helper::convert_IP(WiFi.localIP());
-    String gwipStr = Helper::convert_IP(WiFi.gatewayIP());
-
-    String message = "";
-    // message += "device type:      " + device_type_strings[typeNumber];
-    // message += "\nserial:           ";
-    // message += String(serialNumber);
-    // message += "\nsw version:       ";
-    // message += SW_VERSION;
-    message += "\nmy mac:           ";
-    message += macStr;
-    message += "\nconnected to:     ";
-    message += WiFi.SSID();
-    message += "\nmy ip:            ";
-    message += ipStr;
-    message += "\ngateway ip:       ";
-    message += gwipStr;
-    message += "\nsignal strength:  ";
-    message += String(WiFi.RSSI());
-    // message += "\nserver ip:        ";
-    // message += HLS_SERVER_IP;
-    message += "\n";
-
-    HTTPHandlers::send_response(200, message);
-}
-
-void HTTPHandlers::handle_program() {
-    WebServer *server = HTTPHandlers::get()->get_server();
+void HTTPHandlers::handle_program(HTTPRequest *req, HTTPResponse *res) {
     String title = "";
     String desc = "";
 
-    String message = "Number of args received:";
-    //Get number of parameters
-    message += server->args();
-    message += "\n";
+    String buffer = req->getRequestString().c_str();
+    int i = buffer.indexOf('?');
+    buffer = buffer.substring(i+1);
+    Serial.println(buffer);
 
-    if (server->hasArg("title")) {
-        title = server->arg("title");
-    }
-    if (server->hasArg("desc")) {
-        desc = server->arg("desc");
+    std::map<String, String> params;
+    Helper::parse_query_string(buffer, &params);
+    for (auto const& param : params) {
+        Serial.print(param.first);
+        Serial.print(": ");
+        Serial.println(param.second);
     }
 
-    for (int i = 0; i < server->args(); i++) {
-        //Include the current iteration value
-        message += "Arg no" + (String)i + "-> ";
-        //Get the name of the parameter
-        message += server->argName(i) + ": ";
-        //Get the value of the parameter
-        message += server->arg(i) + "\n";
-    }
-    HTTPHandlers::send_response(200, message);
+    title = params["title"];
+    desc = params["desc"];
+
+    res->setStatusCode(200);
+    res->setStatusText("Found");
+    res->setHeader("Content-Type", "text/plain");
+    res->println("OK");
 
     TaskBoard::show_task(title, desc);
 }
 
-void HTTPHandlers::handle_generic_args() {
-    WebServer *server = HTTPHandlers::get()->get_server();
-    String message = "Number of args received:";
-    //Get number of parameters
-    message += server->args();
-    message += "\n";
-
-    for (int i = 0; i < server->args(); i++) {
-        //Include the current iteration value
-        message += "Arg no" + (String)i + "-> ";
-        //Get the name of the parameter
-        message += server->argName(i) + ": ";
-        //Get the value of the parameter
-        message += server->arg(i) + "\n";
+void HTTPHandlers::handle_file(HTTPRequest *req, HTTPResponse *res) {
+    std::string filename = req->getRequestString();
+    // Check if the file exists
+    if (!LittleFS.exists(filename.c_str())) {
+        // Send "404 Not Found" as response, as the file doesn't seem to exist
+        res->setStatusCode(404);
+        res->setStatusText("Not found");
+        res->println("404 Not Found");
+        return;
     }
-    HTTPHandlers::send_response(200, message);
+
+    File file = LittleFS.open(filename.c_str());
+
+    // Set length
+    res->setHeader("Content-Length", httpsserver::intToString(file.size()));
+
+    // Content-Type is guessed using the definition of the contentTypes-table defined above
+    int cTypeIdx = 0;
+    do {
+        if (filename.rfind(contentTypes[cTypeIdx][0])!=std::string::npos) {
+            res->setHeader("Content-Type", contentTypes[cTypeIdx][1]);
+            break;
+        }
+        cTypeIdx+=1;
+    } while (strlen(contentTypes[cTypeIdx][0].c_str())>0);
+
+    // Read the file and write it to the response
+    uint8_t buffer[256];
+    size_t length = 0;
+    do {
+        length = file.read(buffer, 256);
+        res->write(buffer, length);
+    } while (length > 0);
+
+    file.close();
 }
 
-bool HTTPHandlers::load_from_fs(WebServer *server) {
-    String path = server->uri();
-    String dataType = "text/plain";
-    if (path.endsWith("/")){
-        path += "index.html";
-    }
-
-    if (path.endsWith(".src")) path = path.substring(0, path.lastIndexOf("."));
-    else if (path.endsWith(".html")) dataType = "text/html";
-    else if (path.endsWith(".htm")) dataType = "text/html";
-    else if (path.endsWith(".css")) dataType = "text/css";
-    else if (path.endsWith(".js")) dataType = "application/javascript";
-    else if (path.endsWith(".png")) dataType = "image/png";
-    else if (path.endsWith(".gif")) dataType = "image/gif";
-    else if (path.endsWith(".jpg")) dataType = "image/jpeg";
-    else if (path.endsWith(".ico")) dataType = "image/x-icon";
-    else if (path.endsWith(".xml")) dataType = "text/xml";
-    else if (path.endsWith(".pdf")) dataType = "application/pdf";
-    else if (path.endsWith(".zip")) dataType = "application/zip";
-    File dataFile = LittleFS.open(path.c_str(), "r");
-    if (server->hasArg("download")) {
-        dataType = "application/octet-stream";
-    }
-    if (server->streamFile(dataFile, dataType) != dataFile.size()) {
-    }
-
-    dataFile.close();
-    return true;
+void HTTPHandlers::handle_list(HTTPRequest *req, HTTPResponse *res) {
+    Helper::list_dir(res, "/", 3);
+    Helper::list_dir(&Serial, "/", 3);
+    res->setStatusCode(200);
+    res->setStatusText("Found");
+    res->setHeader("Content-Type", "text/plain");
 }

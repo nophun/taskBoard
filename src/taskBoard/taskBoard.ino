@@ -39,11 +39,12 @@ void setup() {
         Serial.println("Filesystem mounted OK");
     }
 
+    pinMode(BUTTON_PIN, INPUT_PULLUP);
     setup_oled();
 
     if (setup_wifi()) {
         Serial.println("\nWiFi connected");
-        Serial.println("IP address: ");
+        Serial.print("IP address: ");
         Serial.println(Helper::convert_IP(WiFi.localIP()).c_str());
         
         config_server();
@@ -58,12 +59,15 @@ void setup() {
 
 void loop() {
     if (taskboard.check_incoming_byte()) {
-        taskboard.show_task(taskboard.get_title(), taskboard.get_desc());
+        String title = taskboard.get_title();
+        String desc = taskboard.get_desc();
+        taskboard.show_task(title, desc);
     }
     taskboard.check_timeout();
 
     if (WiFi.status() == WL_CONNECTED) {
-        server.handleClient();
+        loop_server();
+        // server.handleClient();
     }
 
     oled.refresh();
@@ -180,7 +184,7 @@ String TaskBoard::limit_title(const String& raw_title) {
     return limited_title;
 }
 
-void TaskBoard::show_task(String title, String desc) {
+void TaskBoard::show_task(String &title, String &desc) {
     int16_t tbx, tby;
     uint16_t tbw, tbh;
 
@@ -211,4 +215,28 @@ void TaskBoard::show_task(String title, String desc) {
         display.print(desc);
     }
     while (display.nextPage());
+}
+
+void TaskBoard::store_wifi_config(String config) {
+    File config_file = LittleFS.open(wificonfig_filename, FILE_WRITE);
+    if (!config_file) {
+        Serial.println("Failed to open file for writing");
+        return;
+    }
+    config_file.print(config);
+    config_file.close();
+    Serial.println("wifi config stored");
+}
+
+String TaskBoard::read_wifi_config() {
+    File config_file = LittleFS.open(wificonfig_filename);
+    if (!config_file) {
+        Serial.println("Failed to open file for reading");
+        return "";
+    }
+    char buffer[256];
+    int len = config_file.read(reinterpret_cast<uint8_t *>(buffer), 256);
+    buffer[len] = '\0';
+    config_file.close();
+    return buffer;
 }
