@@ -18,7 +18,7 @@ bool try_connect();
 bool connect_wifi();
 void config_server();
 void loop_server();
-void setup_wifi_ap();
+uint32_t setup_wifi_ap();
 
 bool connect_open(const String &ssid);
 bool connect_personal(const String &ssid, const String &psk);

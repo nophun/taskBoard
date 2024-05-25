@@ -89,12 +89,15 @@ void TaskBoard::loop() {
             /* Button hold down for 2 seconds */
             if (m_button_time && ((millis() - m_button_time) > cResetDelay)) {
                 Serial.println("Configure WiFi AP");
-                setup_wifi_ap();
+                uint32_t passcode = setup_wifi_ap();
                 config_server();
                 m_ap_mode = true;
                 Serial.println(WiFi.softAPIP().toString());
                 Serial.println(WiFi.softAPSSID());
-                display_header(get_my_ip().toString());
+                String h1 = String("ssid: ") + WiFi.softAPSSID();
+                String h2 = String("passcode: ") + String(passcode);
+                String h3 = String("ip: ") + get_my_ip().toString();
+                display_header(h1, h2, h3);
                 display_value("WIFI CONF");
                 display_refresh();
                 m_button_time = 0;

@@ -144,11 +144,21 @@ void loop_server() {
     insecureServer.loop();
 }
 
-void setup_wifi_ap() {
+uint32_t setup_wifi_ap() {
     static constexpr int cDNSPort = 53;
+    uint8_t mac[6];
+    char ssid[15] = {0};
+    uint32_t passcode = 0U;
+
+    WiFi.macAddress(mac);
+    sprintf(ssid, "Taskboard_%02X%02X", mac[4], mac[5]);
+    passcode = *reinterpret_cast<uint32_t *>(mac) % 100000000;
+    String pass_str = String(passcode);
+
     WiFi.disconnect(true);
     WiFi.mode(WIFI_AP);
-    WiFi.softAP("taskboard", "12345678");
-
+    WiFi.softAP(ssid, pass_str.c_str());
     dnsServer.start(cDNSPort, "*", WiFi.softAPIP());
+
+    return passcode;
 }
