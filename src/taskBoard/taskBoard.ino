@@ -230,15 +230,17 @@ void TaskBoard::display_refresh() {
     m_taskboard->m_display->refresh();
 }
 
-void TaskBoard::store_wifi_config(String config) {
+bool TaskBoard::store_wifi_config(String config) {
     File config_file = LittleFS.open(wificonfig_filename, FILE_WRITE);
     if (!config_file) {
         Serial.println("Failed to open file for writing");
-        return;
+        return false;
     }
     config_file.print(config);
     config_file.close();
     Serial.println("wifi config stored");
+
+    return true;
 }
 
 String TaskBoard::read_wifi_config() {

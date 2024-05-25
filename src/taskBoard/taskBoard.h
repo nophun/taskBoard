@@ -29,7 +29,7 @@ public:
     static void display_value(const String &value);
     static void display_refresh();
     static String limit_title(const String& raw_title);
-    static void store_wifi_config(String config);
+    static bool store_wifi_config(String config);
     static String read_wifi_config();
     static void schedule_restart(unsigned long deadline) {
         m_taskboard->set_restart_deadline(deadline);

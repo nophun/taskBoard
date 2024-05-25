@@ -46,11 +46,6 @@ void HTTPHandlers::handle_insecure_root(HTTPRequest *req, HTTPResponse *res) {
 
 void HTTPHandlers::handle_wifi_config(HTTPRequest *req, HTTPResponse *res) {
     Serial.println("handle_wifi_config");
-    Serial.println(req->getRequestString().c_str());
-    res->setStatusCode(200);
-    res->setStatusText("OK");
-    res->setHeader("Content-Type", "text/plain");
-    res->println("OK");
 
     char query[256] = {};
     size_t len = req->getContentLength();
@@ -67,7 +62,12 @@ void HTTPHandlers::handle_wifi_config(HTTPRequest *req, HTTPResponse *res) {
         Serial.println(param.second);
     }
 
-    TaskBoard::store_wifi_config(query);
+    if (TaskBoard::store_wifi_config(query)) {
+        read_file("/success.html", res);
+    } else {
+        read_file("/failed.html", res);
+    }
+
 }
 
 void HTTPHandlers::handle_program(HTTPRequest *req, HTTPResponse *res) {
