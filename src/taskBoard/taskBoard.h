@@ -27,9 +27,9 @@ public:
     static TaskBoard *get() { return m_taskboard; }
 
     static void show_task(const String &title, const String &desc);
-    static void display_header(const String &header);
+    static void display_header(const String &header1, const String &header2 = "",
+        const String &header3 = "");
     static void display_value(const String &value);
-    static void display_refresh();
     static String limit_title(const String& raw_title);
     static bool store_wifi_config(String config);
     static String read_wifi_config();
@@ -48,6 +48,7 @@ private:
     inline static const String wificonfig_filename = "/wificonfig";
     inline static TaskBoard *m_taskboard = nullptr;
     void init_display(void);
+    void display_refresh();
     static bool check_button();
     bool check_incoming_byte();
     void check_timeout();
@@ -90,8 +91,15 @@ private:
     uint8_t m_data_crc {0x00};
     struct msg m_buffer {};
     unsigned long m_last_receive_time {0};
-    unsigned long m_restart_deadline {0};
     bool m_ap_mode {false};
+    
+    /* Reset button state holder */
+    unsigned long m_restart_deadline {0};
     bool m_button_state {false};
     uint32_t m_button_time {0};
+
+    /* Oled display collection */
+    std::array<String, 3> m_display_headers {};
+    size_t m_header_index {0};
+    uint32_t m_header_set_time {0};
 };

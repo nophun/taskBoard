@@ -268,8 +268,14 @@ void TaskBoard::init_display() {
     m_display->start();
 }
 
-void TaskBoard::display_header(const String &header) {
-    m_taskboard->m_display->set_header(header.c_str(), Alignment::Center);
+void TaskBoard::display_header(const String &header1, const String &header2,
+    const String &header3) {
+    m_taskboard->m_display_headers[0] = header1;
+    m_taskboard->m_display_headers[1] = header2;
+    m_taskboard->m_display_headers[2] = header3;
+    m_taskboard->m_header_set_time = millis();
+    m_taskboard->m_header_index = 0U;
+    m_taskboard->m_display->set_header(header1.c_str(), Alignment::Center);
 }
 
 void TaskBoard::display_value(const String &value) {
@@ -277,7 +283,17 @@ void TaskBoard::display_value(const String &value) {
 }
 
 void TaskBoard::display_refresh() {
-    m_taskboard->m_display->refresh();
+    if (millis() - m_header_set_time > 5000) {
+        for (size_t i = 0U; i < m_display_headers.size() - 1U; ++i) {
+            m_header_index = (++m_header_index) % m_display_headers.size();
+            if (m_display_headers[m_header_index].length() > 0) {
+                m_display->set_header(m_display_headers[m_header_index].c_str(), Alignment::Center);
+                m_header_set_time = millis();
+                break;
+            }
+        }
+    }
+    m_display->refresh();
 }
 
 bool TaskBoard::store_wifi_config(String config) {
