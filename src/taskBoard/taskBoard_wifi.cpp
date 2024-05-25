@@ -123,6 +123,7 @@ void config_server() {
     ResourceNode *nodeList          = new ResourceNode("/list", "GET", &HTTPHandlers::handle_list);
     ResourceNode *nodeWifi          = new ResourceNode("/wifi", "GET", &HTTPHandlers::handle_wifi);
     ResourceNode *nodeWifiHtml      = new ResourceNode("/wifi.html", "GET", &HTTPHandlers::handle_wifi);
+    ResourceNode *nodeRestart       = new ResourceNode("/restart", "GET", &HTTPHandlers::handle_restart);
 
     secureServer.registerNode(nodeRoot);
     insecureServer.registerNode(nodeInsecureRoot);
@@ -138,6 +139,9 @@ void config_server() {
     secureServer.registerNode(nodeWifi);
     insecureServer.registerNode(nodeWifi);
     insecureServer.registerNode(nodeWifiHtml);
+
+    secureServer.registerNode(nodeRestart);
+    insecureServer.registerNode(nodeRestart);
     
     secureServer.setDefaultNode(nodeFile);
     insecureServer.setDefaultNode(nodeFile);

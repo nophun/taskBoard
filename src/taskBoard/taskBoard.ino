@@ -6,7 +6,6 @@
 #include <LittleFS.h>
 #include "taskBoard.h"
 #include "bsp.h"
-#include "oled.h"
 #include "helpers.h"
 #include "taskBoard_wifi.h"
 #include "fonts/Pockota_Bold16pt7b.h"
@@ -21,15 +20,7 @@ GxEPD2_BW<GxEPD2_213_BN, GxEPD2_213_BN::HEIGHT> display(GxEPD2_213_BN(EPD_CS, EP
 //GxEPD2_BW<GxEPD2_290_BS, GxEPD2_290_BS::HEIGHT> display(GxEPD2_290_BS(/*CS=5*/ 5, /*DC=*/ 0, /*RST=*/ 2, /*BUSY=*/ 15)); // DEPG0290BS 128x296, SSD1680
 //GxEPD2_3C<GxEPD2_290_C90c, GxEPD2_290_C90c::HEIGHT> display(GxEPD2_290_C90c(/*CS=5*/ 5, /*DC=*/ 0, /*RST=*/ 2, /*BUSY=*/ 15)); // GDEM029C90 128x296, SSD1680
 
-TaskBoard taskboard(&display);
-
-void setup_oled() {
-    Wire.begin();
-    oled.start();
-    oled.set_header("", Alignment::Center);
-    oled.set_value("CONNECTING");
-    oled.refresh();
-}
+TaskBoard taskboard(&display, &oled);
 
 void setup() {
     Serial.begin(115200);
@@ -40,7 +31,10 @@ void setup() {
     }
 
     pinMode(BUTTON_PIN, INPUT_PULLUP);
-    setup_oled();
+    taskboard.init_display();
+    taskboard.display_header("");
+    taskboard.display_value("CONNECTING");
+    taskboard.display_refresh();
 
     if (setup_wifi()) {
         Serial.println("\nWiFi connected");
@@ -49,15 +43,17 @@ void setup() {
         
         config_server();
         
-        oled.set_header(Helper::convert_IP(WiFi.localIP()).c_str(), Alignment::Center);
-        oled.set_value("READY");
+        taskboard.display_header(Helper::convert_IP(WiFi.localIP()));
+        taskboard.display_value("READY");
     } else {
-        oled.set_value("NO WIFI");
+        taskboard.display_value("NO WIFI");
     }
-    oled.refresh();
+    taskboard.display_refresh();
 }
 
 void loop() {
+    taskboard.shall_restart();
+
     if (taskboard.check_incoming_byte()) {
         String title = taskboard.get_title();
         String desc = taskboard.get_desc();
@@ -67,11 +63,9 @@ void loop() {
 
     if (WiFi.status() == WL_CONNECTED) {
         loop_server();
-        // server.handleClient();
     }
 
-    oled.refresh();
-
+    taskboard.display_refresh();
     delay(1);
 }
 
@@ -153,6 +147,7 @@ String TaskBoard::limit_title(const String& raw_title) {
     static constexpr size_t max_title_len = 28;
     static constexpr size_t line_height_limit = 32;
 
+    auto tag = TaskBoard::get()->m_tag;
     String limited_title;
     size_t len = min_title_len;
     size_t max_len = min(raw_title.length(), max_title_len);
@@ -165,10 +160,10 @@ String TaskBoard::limit_title(const String& raw_title) {
         return raw_title;
     }
 
-    display.setFont(&Pockota_Bold16pt7b);
+    tag->setFont(&Pockota_Bold16pt7b);
     do {
         limited_title = raw_title.substring(0, len);
-        display.getTextBounds(limited_title, 0, 0, &tbx, &tby, &tbw, &tbh);
+        tag->getTextBounds(limited_title, 0, 0, &tbx, &tby, &tbw, &tbh);
         Serial.println("Title '" + limited_title + "' bounds: " + String(tbx) + " " + String(tby) + " " + String(tbw) + " " + String(tbh) + ", len " + String(len));
         
         if (tbh > line_height_limit) {
@@ -185,36 +180,54 @@ String TaskBoard::limit_title(const String& raw_title) {
 }
 
 void TaskBoard::show_task(String &title, String &desc) {
+    auto tag = TaskBoard::get()->m_tag;
     int16_t tbx, tby;
     uint16_t tbw, tbh;
 
-    display.init(115200, true, 50, false);
-    display.setRotation(1);
+    tag->init(115200, true, 50, false);
+    tag->setRotation(1);
 
     String limited_title = TaskBoard::limit_title(title);
     Serial.println("Title: " + limited_title + "\nDesc: "+ desc);
 
-    display.setFont(&Pockota_Bold16pt7b);
-    display.getTextBounds(desc, 0, 56, &tbx, &tby, &tbw, &tbh);
+    tag->setFont(&Pockota_Bold16pt7b);
+    tag->getTextBounds(desc, 0, 56, &tbx, &tby, &tbw, &tbh);
     Serial.println("desc Text bounds: " + String(tbx) + " " + String(tby) + " " + String(tbw) + " " + String(tbh));
-    display.getTextBounds(limited_title, 0, 0, &tbx, &tby, &tbw, &tbh);
+    tag->getTextBounds(limited_title, 0, 0, &tbx, &tby, &tbw, &tbh);
     Serial.println("title Text bounds: " + String(tbx) + " " + String(tby) + " " + String(tbw) + " " + String(tbh));
-    display.setFullWindow();
-    display.firstPage();
+    tag->setFullWindow();
+    tag->firstPage();
     do {
-        display.fillScreen(GxEPD_WHITE); 
+        tag->fillScreen(GxEPD_WHITE); 
 
-        display.setTextColor(display.epd2.hasColor ? GxEPD_RED : GxEPD_BLACK);
-        display.setCursor(-tbx + (250 - tbw) / 2, 23);
-        display.setFont(&Pockota_Bold16pt7b);
-        display.print(limited_title);
+        tag->setTextColor(tag->epd2.hasColor ? GxEPD_RED : GxEPD_BLACK);
+        tag->setCursor(-tbx + (250 - tbw) / 2, 23);
+        tag->setFont(&Pockota_Bold16pt7b);
+        tag->print(limited_title);
 
-        display.setTextColor(GxEPD_BLACK);
-        display.setCursor(0, 60);
-        display.setFont(&VaisalaSans_Light7pt7b);
-        display.print(desc);
+        tag->setTextColor(GxEPD_BLACK);
+        tag->setCursor(0, 60);
+        tag->setFont(&VaisalaSans_Light7pt7b);
+        tag->print(desc);
     }
-    while (display.nextPage());
+    while (tag->nextPage());
+}
+
+void TaskBoard::init_display() {
+    Wire.begin();
+    m_taskboard->m_display->start();
+}
+
+void TaskBoard::display_header(const String &header) {
+    m_taskboard->m_display->set_header(header.c_str(), Alignment::Center);
+}
+
+void TaskBoard::display_value(const String &value) {
+    m_taskboard->m_display->set_value(value.c_str());
+}
+
+void TaskBoard::display_refresh() {
+    m_taskboard->m_display->refresh();
 }
 
 void TaskBoard::store_wifi_config(String config) {
@@ -239,4 +252,10 @@ String TaskBoard::read_wifi_config() {
     buffer[len] = '\0';
     config_file.close();
     return buffer;
+}
+
+void TaskBoard::shall_restart() {
+    if (m_restart_deadline != 0 && millis() > m_restart_deadline) {
+        ESP.restart();
+    }
 }

@@ -127,6 +127,12 @@ void HTTPHandlers::handle_wifi(HTTPRequest *req, HTTPResponse *res) {
     res->println("");
 }
 
+void HTTPHandlers::handle_restart(HTTPRequest *req, HTTPResponse *res) {
+    handle_insecure_root(req, res);
+    TaskBoard::display_value("RESTARTING");
+    TaskBoard::schedule_restart(millis() + 2000U);
+}
+
 bool HTTPHandlers::read_file(const String &filename, HTTPResponse *res) {
     // Check if the file exists
     if (!LittleFS.exists(filename.c_str())) {

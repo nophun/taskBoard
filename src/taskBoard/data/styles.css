@@ -45,7 +45,7 @@ textarea#desc {
     font-size: 15px;
     resize: none;
 }
-input#create {
+input.button {
     font-family: "Tahoma";
     font-size: 18px;
 }
