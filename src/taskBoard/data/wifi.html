@@ -1,12 +1,56 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <title>Configure WiFi settings</title>
     <meta charset="utf-8" />
     <link rel="icon" type="image/png" href="Yuster_logo.webp" />
     <link rel="stylesheet" href="styles.css">
+    <script>
+
+function auth_change() {
+    var auth = document.getElementById('auth').value;
+    var rows = document.querySelectorAll("#wificonfig tr");
+    rows.forEach(function(row) {
+        if (auth == 'n') {
+            if (row.getAttribute("entryname") === "username_row") {
+                row.classList.add("hidden");
+                var input = row.querySelector("input[type='text']");
+                if (input) {
+                    input.value = "";
+                }
+            }
+            if (row.getAttribute("entryname") === "passcode_row") {
+                row.classList.add("hidden");
+                var input = row.querySelector("input[type='password']");
+                if (input) {
+                    input.value = "";
+                }
+            }
+        } else if (auth == 'p') {
+            if (row.getAttribute("entryname") === "username_row") {
+                row.classList.add("hidden");
+                var input = row.querySelector("input[type='text']");
+                if (input) {
+                    input.value = "";
+                }
+            }
+            if (row.getAttribute("entryname") === "passcode_row") {
+                row.classList.remove("hidden");
+            }
+        } else if (auth == 'e') {
+            if (row.getAttribute("entryname") === "username_row") {
+                row.classList.remove("hidden");
+            }
+            if (row.getAttribute("entryname") === "passcode_row") {
+                row.classList.remove("hidden");
+            }
+        }
+    });
+}
+</script>
 </head>
 <body>
-<table class="center" width="276px">
+<table class="center" width="276px" id="wificonfig">
     <tr>
         <td>
             <img src="Yuster_logo.webp" alt="Yuster logo" width="50">
@@ -19,7 +63,7 @@
                 <label for="ssid">SSID:</label>
             </td>
             <td>
-                <input type="text" pattern="[a-zA-Z0-9!@#$%^*_|]{6,25}" id="ssid" name="ssid">
+                <input type="text" pattern="[\x00-\x7F]*" id="ssid" name="ssid">
             </td>
         </tr>
         <tr>
@@ -27,22 +71,22 @@
                 <label for="auth">Security:</label>
             </td>
             <td>
-                <select name="auth" id="auth"> 
+                <select name="auth" id="auth" onchange="auth_change()"> 
                     <option value="n">No authentication</option> 
                     <option value="p">WPA2-Personal</option> 
                     <option value="e">WPA2-Enterprise</option> 
                 </select>
             </td>
         </tr>
-        <tr>
+        <tr entryname="username_row" class="hidden">
             <td width="100px">
                 <label for="user">Username:</label>
             </td>
             <td>
-                <input type="text" pattern="[a-zA-Z0-9!@#$%^*_|]{6,25}" id="user" name="user">
+                <input type="text" pattern="[\x00-\x7F]*" id="user" name="user">
             </td>
         </tr>
-        <tr>
+        <tr entryname="passcode_row" class="hidden">
             <td width="100px">
                 <label for="pass">Passcode:</label>
             </td>
