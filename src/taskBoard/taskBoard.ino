@@ -19,8 +19,10 @@ GxEPD2_BW<GxEPD2_213_BN, GxEPD2_213_BN::HEIGHT> display(GxEPD2_213_BN(EPD_CS, EP
 // 2.9'' EPD Module
 //GxEPD2_BW<GxEPD2_290_BS, GxEPD2_290_BS::HEIGHT> display(GxEPD2_290_BS(/*CS=5*/ 5, /*DC=*/ 0, /*RST=*/ 2, /*BUSY=*/ 15)); // DEPG0290BS 128x296, SSD1680
 //GxEPD2_3C<GxEPD2_290_C90c, GxEPD2_290_C90c::HEIGHT> display(GxEPD2_290_C90c(/*CS=5*/ 5, /*DC=*/ 0, /*RST=*/ 2, /*BUSY=*/ 15)); // GDEM029C90 128x296, SSD1680
-
+DNSServer dnsServer{};
 TaskBoard taskboard(&display, &oled);
+
+bool ap_mode = false;
 
 void setup() {
     Serial.begin(115200);
@@ -29,44 +31,92 @@ void setup() {
     if (LittleFS.begin(true)) {
         Serial.println("Filesystem mounted OK");
     }
-
+    
     pinMode(BUTTON_PIN, INPUT_PULLUP);
-    taskboard.init_display();
-    taskboard.display_header("");
-    taskboard.display_value("CONNECTING");
-    taskboard.display_refresh();
 
-    if (setup_wifi()) {
-        Serial.println("\nWiFi connected");
-        Serial.print("IP address: ");
-        Serial.println(Helper::convert_IP(WiFi.localIP()).c_str());
-        
-        config_server();
-        
-        taskboard.display_header(Helper::convert_IP(WiFi.localIP()));
-        taskboard.display_value("READY");
-    } else {
-        taskboard.display_value("NO WIFI");
-    }
-    taskboard.display_refresh();
+    taskboard.setup();
 }
 
 void loop() {
-    taskboard.shall_restart();
+    taskboard.loop();
+    delay(1);
+}
 
-    if (taskboard.check_incoming_byte()) {
-        String title = taskboard.get_title();
-        String desc = taskboard.get_desc();
-        taskboard.show_task(title, desc);
+void TaskBoard::setup() {
+    init_display();
+    display_header("");
+    display_value("CONNECTING");
+    display_refresh();
+
+    if (connect_wifi()) {
+        Serial.println("\nWiFi connected");
+        Serial.print("IP address: ");
+        Serial.println(WiFi.localIP().toString());            
+        config_server();
+        display_header(get_my_ip().toString());
+        display_value("READY");
+    } else {
+        display_value("NO WIFI");
+        show_task(help_title, help_text);
+        return;
     }
-    taskboard.check_timeout();
+    display_refresh();
+}
 
-    if (WiFi.status() == WL_CONNECTED) {
+void TaskBoard::loop() {
+    shall_restart();
+
+    if (check_incoming_byte()) {
+        String title = get_title();
+        String desc = get_desc();
+        show_task(title, desc);
+    }
+    check_timeout();
+
+    if (is_ap_mode()) {
+        dnsServer.processNextRequest();
+        loop_server();
+    } else if (WiFi.status() == WL_CONNECTED) {
         loop_server();
     }
 
-    taskboard.display_refresh();
-    delay(1);
+    if (check_button()) {
+        if (!m_button_state) {
+            /* Button newly pressed */
+            m_button_time = millis();
+            m_button_state = true;
+        } else {
+            /* Button hold down for 2 seconds */
+            if (m_button_time && ((millis() - m_button_time) > cResetDelay)) {
+                Serial.println("Configure WiFi AP");
+                setup_wifi_ap();
+                config_server();
+                m_ap_mode = true;
+                Serial.println(WiFi.softAPIP().toString());
+                Serial.println(WiFi.softAPSSID());
+                display_header(get_my_ip().toString());
+                display_value("WIFI CONF");
+                display_refresh();
+                m_button_time = 0;
+            }
+        }
+    } else {
+        /* Button release before 2 seconds -> restart */
+        if (m_button_time && ((millis() - m_button_time) < cResetDelay)) {
+            ESP.restart();
+        }
+        m_button_state = false;
+        m_button_time = 0;
+    }
+
+    display_refresh();
+}
+
+bool TaskBoard::check_button() {
+    if (digitalRead(BUTTON_PIN) == LOW) {
+        return true;
+    }
+    return false;
 }
 
 bool TaskBoard::check_incoming_byte() {
@@ -179,7 +229,7 @@ String TaskBoard::limit_title(const String& raw_title) {
     return limited_title;
 }
 
-void TaskBoard::show_task(String &title, String &desc) {
+void TaskBoard::show_task(const String &title, const String &desc) {
     auto tag = TaskBoard::get()->m_tag;
     int16_t tbx, tby;
     uint16_t tbw, tbh;
@@ -215,7 +265,7 @@ void TaskBoard::show_task(String &title, String &desc) {
 
 void TaskBoard::init_display() {
     Wire.begin();
-    m_taskboard->m_display->start();
+    m_display->start();
 }
 
 void TaskBoard::display_header(const String &header) {
@@ -259,5 +309,13 @@ String TaskBoard::read_wifi_config() {
 void TaskBoard::shall_restart() {
     if (m_restart_deadline != 0 && millis() > m_restart_deadline) {
         ESP.restart();
+    }
+}
+
+IPAddress TaskBoard::get_my_ip() {
+    if (m_taskboard->is_ap_mode()) {
+        return WiFi.softAPIP();
+    } else {
+        return WiFi.localIP();
     }
 }

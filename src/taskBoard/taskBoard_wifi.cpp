@@ -9,7 +9,7 @@
 #include "private_key.h"
 
 using namespace httpsserver;
-
+extern DNSServer dnsServer;
 SSLCert cert = SSLCert(
   example_crt_DER, example_crt_DER_len,
   example_key_DER, example_key_DER_len
@@ -67,7 +67,7 @@ bool connect_enterprise(const char *ssid, const char *id, const char *user, cons
     return try_connect();
 }
 
-bool setup_wifi() {
+bool connect_wifi() {
     String config = TaskBoard::read_wifi_config();
     std::map<String, String> params;
     Helper::parse_query_string(config, &params);
@@ -96,20 +96,6 @@ bool setup_wifi() {
         }
         Serial.println("\nWiFi connect failed");
     }
-
-    // Serial.println("Connecting to WiFi (" + String(WIFI_SSID) + ")");
-    // if (connect_enterprise(WIFI_SSID, EAP_USERNAME, EAP_PASSWORD)) {
-    //     return true;
-    // }
-    // Serial.println("\nWiFi connect failed");
-
-    Serial.println("Trying default settings (ESP_AP)");
-    String def_ssid = "ESP_AP";
-    String def_psk = "winteriscoming";
-    if (connect_personal(def_ssid, def_psk)) {
-        return true;
-    }
-    Serial.println("\nWiFi connect failed");
 
     return false;
 }
@@ -156,4 +142,13 @@ void config_server() {
 void loop_server() {
     secureServer.loop();
     insecureServer.loop();
+}
+
+void setup_wifi_ap() {
+    static constexpr int cDNSPort = 53;
+    WiFi.disconnect(true);
+    WiFi.mode(WIFI_AP);
+    WiFi.softAP("taskboard", "12345678");
+
+    dnsServer.start(cDNSPort, "*", WiFi.softAPIP());
 }

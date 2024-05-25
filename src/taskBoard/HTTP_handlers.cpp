@@ -27,7 +27,11 @@ static const String contentTypes[][2] = {
 
 void HTTPHandlers::handle_root(HTTPRequest *req, HTTPResponse *res) {
     Serial.println("handle_root");
-    res->setHeader("Location", "/programmer.html");
+    if (TaskBoard::is_ap_mode()) {
+        res->setHeader("Location", "/wifi.html");
+    } else {
+        res->setHeader("Location", "/programmer.html");
+    }
     res->setStatusCode(302);
     res->setStatusText("Found");
     res->setHeader("Content-Type", "text/plain");
@@ -35,7 +39,7 @@ void HTTPHandlers::handle_root(HTTPRequest *req, HTTPResponse *res) {
 }
 
 void HTTPHandlers::handle_insecure_root(HTTPRequest *req, HTTPResponse *res) {
-    String address = String("https://") + Helper::convert_IP(WiFi.localIP());
+    String address = String("https://") + TaskBoard::get_my_ip().toString();
     Serial.println("Redirecting to " + address);
     res->setHeader("Location", address.c_str());
     res->setStatusCode(302);
@@ -118,7 +122,7 @@ void HTTPHandlers::handle_list(HTTPRequest *req, HTTPResponse *res) {
 }
 
 void HTTPHandlers::handle_wifi(HTTPRequest *req, HTTPResponse *res) {
-    String address = String("https://") + Helper::convert_IP(WiFi.localIP()) + String("/wifi.html");
+    String address = String("https://") + TaskBoard::get_my_ip().toString() + String("/wifi.html");
     Serial.println("Redirecting to " + address);
     res->setHeader("Location", address.c_str());
     res->setStatusCode(302);
