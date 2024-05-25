@@ -44,7 +44,7 @@ void loop() {
 
 void TaskBoard::setup() {
     init_display();
-    display_header("");
+    display_header(DEVICE_ID);
     display_value("CONNECTING");
     display_refresh();
 

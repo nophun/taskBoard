@@ -10,6 +10,9 @@ static const String help_text = "1) hold reset button for 2 seconds\n"
                                 "2) connect to taskboard WiFi AP\n"
                                 "3) go to http://taskboard.local\n"
                                 "4) configure new WiFi settings";
+#define SW_VERSION "v1.1"
+#define TASKBOARD "Taskboard"
+#define DEVICE_ID TASKBOARD " " SW_VERSION
 
 class TaskBoard {
 public:
