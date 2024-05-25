@@ -51,7 +51,7 @@ void TaskBoard::setup() {
     if (connect_wifi()) {
         Serial.println("\nWiFi connected");
         Serial.print("IP address: ");
-        Serial.println(get_my_ip().toString());            
+        Serial.println(get_my_ip().toString());
         config_server();
         display_header(get_my_ip().toString());
         display_value("READY");

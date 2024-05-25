@@ -18,7 +18,7 @@ const struct font0507 cs0507_up[27] = {c0507_A, c0507_B, c0507_C, c0507_D, c0507
 const struct font0507 cs0507_low[27] = {c0507_a, c0507_b, c0507_c, c0507_d, c0507_e, c0507_f, c0507_g, c0507_h, c0507_i, c0507_j,
                                         c0507_k, c0507_l, c0507_m, c0507_n, c0507_o, c0507_p, c0507_q, c0507_r, c0507_s, c0507_t,
                                         c0507_u, c0507_v, c0507_w, c0507_x, c0507_y, c0507_z, c0507_UNKN};
-const struct font0507 s0507[13] = {c0507_UNKN, s0507_1, s0507_2, s0507_3, s0507_4, s0507_5, s0507_6, s0507_7, s0507_8, s0507_9, s0507_10, s0507_11, s0507_12};
+const struct font0507 s0507[17] = {c0507_UNKN, s0507_1, s0507_2, s0507_3, s0507_4, s0507_5, s0507_6, s0507_7, s0507_8, s0507_9, s0507_10, s0507_11, s0507_12, s0507_13, s0507_14, s0507_15, s0507_16};
 const struct font1014 ns1014[10] = {n1014_0, n1014_1, n1014_2, n1014_3, n1014_4, n1014_5, n1014_6, n1014_7, n1014_8, n1014_9};
 const struct font1014 cs1014_up[] = {c1014_A, c1014_B, c1014_C, c1014_D, c1014_E, c1014_F, c1014_G, c1014_H, c1014_I, c1014_J,
                                      c1014_K, c1014_L, c1014_M, c1014_N, c1014_O, c1014_P, c1014_Q, c1014_R, c1014_S, c1014_T,
@@ -295,19 +295,16 @@ void print_font0507(uint32_t *data, const char *text) {
                 put_font0507(data, s0507[6]);
                 break;
             case '+':
-                put_font0507(data, s0507[7]);
+                put_font0507(data, s0507[8]);
                 break;
             case '_':
-                put_font0507(data, s0507[8]);
+                put_font0507(data, s0507[9]);
                 break;
             case '%':
                 put_font0507(data, s0507[11]);
                 break;
             case '/':
                 put_font0507(data, s0507[12]);
-                break;
-            case '#':
-                put_font0507(data, s0507[10]);
                 break;
             case '?':
                 put_font0507(data, s0507[13]);
@@ -317,6 +314,9 @@ void print_font0507(uint32_t *data, const char *text) {
                 break;
             case '<':
                 put_font0507(data, s0507[15]);
+                break;
+            case '#':
+                put_font0507(data, s0507[16]);
                 break;
             default:
                 if (*text >= '0' && *text <= '9') {

@@ -4,7 +4,6 @@
 #include "taskBoard_wifi.h"
 #include "taskBoard.h"
 #include "helpers.h"
-#include "secrets.h"
 #include "cert.h"
 #include "private_key.h"
 
