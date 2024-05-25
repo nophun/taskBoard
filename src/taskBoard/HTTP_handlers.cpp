@@ -9,7 +9,7 @@ extern int serialNumber;
 extern int typeNumber;
 using namespace httpsserver;
 
-static const std::string contentTypes[][2] = {
+static const String contentTypes[][2] = {
     {".css",  "text/css"},
     {".gif",  "image/gif"},
     {".htm",  "text/html"},
@@ -35,9 +35,8 @@ void HTTPHandlers::handle_root(HTTPRequest *req, HTTPResponse *res) {
 }
 
 void HTTPHandlers::handle_insecure_root(HTTPRequest *req, HTTPResponse *res) {
-    Serial.println("handle_insecure_root");
     String address = String("https://") + Helper::convert_IP(WiFi.localIP());
-    Serial.println(address);
+    Serial.println("Redirecting to " + address);
     res->setHeader("Location", address.c_str());
     res->setStatusCode(302);
     res->setStatusText("Found");
@@ -49,7 +48,7 @@ void HTTPHandlers::handle_wifi_config(HTTPRequest *req, HTTPResponse *res) {
     Serial.println("handle_wifi_config");
     Serial.println(req->getRequestString().c_str());
     res->setStatusCode(200);
-    res->setStatusText("Found");
+    res->setStatusText("OK");
     res->setHeader("Content-Type", "text/plain");
     res->println("OK");
 
@@ -82,17 +81,17 @@ void HTTPHandlers::handle_program(HTTPRequest *req, HTTPResponse *res) {
 
     std::map<String, String> params;
     Helper::parse_query_string(buffer, &params);
-    for (auto const& param : params) {
-        Serial.print(param.first);
-        Serial.print(": ");
-        Serial.println(param.second);
-    }
+    // for (auto const& param : params) {
+    //     Serial.print(param.first);
+    //     Serial.print(": ");
+    //     Serial.println(param.second);
+    // }
 
     title = params["title"];
     desc = params["desc"];
 
     res->setStatusCode(200);
-    res->setStatusText("Found");
+    res->setStatusText("OK");
     res->setHeader("Content-Type", "text/plain");
     res->println("OK");
 
@@ -100,14 +99,38 @@ void HTTPHandlers::handle_program(HTTPRequest *req, HTTPResponse *res) {
 }
 
 void HTTPHandlers::handle_file(HTTPRequest *req, HTTPResponse *res) {
-    std::string filename = req->getRequestString();
-    // Check if the file exists
-    if (!LittleFS.exists(filename.c_str())) {
+    String filename = req->getRequestString().c_str();
+    if (!read_file(filename, res)) {
         // Send "404 Not Found" as response, as the file doesn't seem to exist
         res->setStatusCode(404);
         res->setStatusText("Not found");
         res->println("404 Not Found");
         return;
+    }
+}
+
+void HTTPHandlers::handle_list(HTTPRequest *req, HTTPResponse *res) {
+    Helper::list_dir(res, "/", 3);
+    Helper::list_dir(&Serial, "/", 3);
+    res->setStatusCode(200);
+    res->setStatusText("OK");
+    res->setHeader("Content-Type", "text/plain");
+}
+
+void HTTPHandlers::handle_wifi(HTTPRequest *req, HTTPResponse *res) {
+    String address = String("https://") + Helper::convert_IP(WiFi.localIP()) + String("/wifi.html");
+    Serial.println("Redirecting to " + address);
+    res->setHeader("Location", address.c_str());
+    res->setStatusCode(302);
+    res->setStatusText("Found");
+    res->setHeader("Content-Type", "text/plain");
+    res->println("");
+}
+
+bool HTTPHandlers::read_file(const String &filename, HTTPResponse *res) {
+    // Check if the file exists
+    if (!LittleFS.exists(filename.c_str())) {
+        return false;
     }
 
     File file = LittleFS.open(filename.c_str());
@@ -118,12 +141,13 @@ void HTTPHandlers::handle_file(HTTPRequest *req, HTTPResponse *res) {
     // Content-Type is guessed using the definition of the contentTypes-table defined above
     int cTypeIdx = 0;
     do {
-        if (filename.rfind(contentTypes[cTypeIdx][0])!=std::string::npos) {
-            res->setHeader("Content-Type", contentTypes[cTypeIdx][1]);
+        if (filename.lastIndexOf(contentTypes[cTypeIdx][0]) != -1) {
+            std::string value(contentTypes[cTypeIdx][1].c_str());
+            res->setHeader("Content-Type", value);
             break;
         }
         cTypeIdx+=1;
-    } while (strlen(contentTypes[cTypeIdx][0].c_str())>0);
+    } while (contentTypes[cTypeIdx][0].length() > 0);
 
     // Read the file and write it to the response
     uint8_t buffer[256];
@@ -134,12 +158,6 @@ void HTTPHandlers::handle_file(HTTPRequest *req, HTTPResponse *res) {
     } while (length > 0);
 
     file.close();
-}
 
-void HTTPHandlers::handle_list(HTTPRequest *req, HTTPResponse *res) {
-    Helper::list_dir(res, "/", 3);
-    Helper::list_dir(&Serial, "/", 3);
-    res->setStatusCode(200);
-    res->setStatusText("Found");
-    res->setHeader("Content-Type", "text/plain");
+    return true;
 }

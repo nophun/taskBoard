@@ -115,12 +115,14 @@ bool setup_wifi() {
 }
 
 void config_server() {
-    ResourceNode *nodeInsecureRoot = new ResourceNode("/", "GET", &HTTPHandlers::handle_insecure_root);
-    ResourceNode *nodeRoot = new ResourceNode("/", "GET", &HTTPHandlers::handle_root);
-    ResourceNode *nodeFile  = new ResourceNode("", "GET", &HTTPHandlers::handle_file);
-    ResourceNode *nodeProgram  = new ResourceNode("/program", "GET", &HTTPHandlers::handle_program);
-    ResourceNode *nodeWifiConfig  = new ResourceNode("/wificonfig", "POST", &HTTPHandlers::handle_wifi_config);
-    ResourceNode *nodeList  = new ResourceNode("/list", "GET", &HTTPHandlers::handle_list);
+    ResourceNode *nodeInsecureRoot  = new ResourceNode("/", "GET", &HTTPHandlers::handle_insecure_root);
+    ResourceNode *nodeRoot          = new ResourceNode("/", "GET", &HTTPHandlers::handle_root);
+    ResourceNode *nodeFile          = new ResourceNode("", "GET", &HTTPHandlers::handle_file);
+    ResourceNode *nodeProgram       = new ResourceNode("/program", "GET", &HTTPHandlers::handle_program);
+    ResourceNode *nodeWifiConfig    = new ResourceNode("/wificonfig", "POST", &HTTPHandlers::handle_wifi_config);
+    ResourceNode *nodeList          = new ResourceNode("/list", "GET", &HTTPHandlers::handle_list);
+    ResourceNode *nodeWifi          = new ResourceNode("/wifi", "GET", &HTTPHandlers::handle_wifi);
+    ResourceNode *nodeWifiHtml      = new ResourceNode("/wifi.html", "GET", &HTTPHandlers::handle_wifi);
 
     secureServer.registerNode(nodeRoot);
     insecureServer.registerNode(nodeInsecureRoot);
@@ -132,6 +134,10 @@ void config_server() {
 
     secureServer.registerNode(nodeList);
     insecureServer.registerNode(nodeList);
+
+    secureServer.registerNode(nodeWifi);
+    insecureServer.registerNode(nodeWifi);
+    insecureServer.registerNode(nodeWifiHtml);
     
     secureServer.setDefaultNode(nodeFile);
     insecureServer.setDefaultNode(nodeFile);
