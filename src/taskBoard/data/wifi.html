@@ -1,105 +1,87 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Configure WiFi settings</title>
-    <meta charset="utf-8" />
-    <link rel="icon" type="image/png" href="Yuster_logo.webp" />
-    <link rel="stylesheet" href="styles.css">
-    <script>
+	<title>Configure WiFi settings</title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="user-scalable=no, initial-scale=1" />
+	<link rel="icon" type="image/png" href="Yuster_logo.webp" />
+	<link rel="stylesheet" href="styles.css">
+	<script>
 
 function auth_change() {
-    var auth = document.getElementById('auth').value;
-    var rows = document.querySelectorAll("#wificonfig tr");
-    rows.forEach(function(row) {
-        if (auth == 'n') {
-            if (row.getAttribute("entryname") === "username_row") {
-                row.classList.add("hidden");
-                var input = row.querySelector("input[type='text']");
-                if (input) {
-                    input.value = "";
-                }
-            }
-            if (row.getAttribute("entryname") === "passcode_row") {
-                row.classList.add("hidden");
-                var input = row.querySelector("input[type='password']");
-                if (input) {
-                    input.value = "";
-                }
-            }
-        } else if (auth == 'p') {
-            if (row.getAttribute("entryname") === "username_row") {
-                row.classList.add("hidden");
-                var input = row.querySelector("input[type='text']");
-                if (input) {
-                    input.value = "";
-                }
-            }
-            if (row.getAttribute("entryname") === "passcode_row") {
-                row.classList.remove("hidden");
-            }
-        } else if (auth == 'e') {
-            if (row.getAttribute("entryname") === "username_row") {
-                row.classList.remove("hidden");
-            }
-            if (row.getAttribute("entryname") === "passcode_row") {
-                row.classList.remove("hidden");
-            }
-        }
-    });
+	var auth = document.getElementById('auth').value;
+	var rows = document.querySelectorAll("#wificonfig tr");
+	rows.forEach(function(row) {
+		if (auth == 'n') {
+			if (row.getAttribute("arg") === "user") {
+				row.classList.add("hidden");
+				row.querySelector("input[type='text']").value = "";
+			}
+			if (row.getAttribute("arg") === "pw") {
+				row.classList.add("hidden");
+				row.querySelector("input[type='password']").value = "";
+			}
+		} else if (auth == 'p') {
+			if (row.getAttribute("arg") === "user") {
+				row.classList.add("hidden");
+				row.querySelector("input[type='text']").value = "";
+			}
+			if (row.getAttribute("arg") === "pw") {
+				row.classList.remove("hidden");
+			}
+		} else if (auth == 'e') {
+			if (row.getAttribute("arg") === "user") {
+				row.classList.remove("hidden");
+			}
+			if (row.getAttribute("arg") === "pw") {
+				row.classList.remove("hidden");
+			}
+		}
+	});
 }
 </script>
 </head>
 <body>
 <table class="center" width="276px" id="wificonfig">
-    <tr>
-        <td>
-            <img src="Yuster_logo.webp" alt="Yuster logo" width="50">
-        </td>
-        <td><h1>Setup WiFi</h1></td>
-    </tr>
-    <form action="wificonfig" method="post">
-        <tr>
-            <td width="100px">
-                <label for="ssid">SSID:</label>
-            </td>
-            <td>
-                <input type="text" pattern="[\x00-\x7F]*" id="ssid" name="ssid">
-            </td>
-        </tr>
-        <tr>
-            <td width="100px">
-                <label for="auth">Security:</label>
-            </td>
-            <td>
-                <select name="auth" id="auth" onchange="auth_change()"> 
-                    <option value="n">No authentication</option> 
-                    <option value="p">WPA2-Personal</option> 
-                    <option value="e">WPA2-Enterprise</option> 
-                </select>
-            </td>
-        </tr>
-        <tr entryname="username_row" class="hidden">
-            <td width="100px">
-                <label for="user">Username:</label>
-            </td>
-            <td>
-                <input type="text" pattern="[\x00-\x7F]*" id="user" name="user">
-            </td>
-        </tr>
-        <tr entryname="passcode_row" class="hidden">
-            <td width="100px">
-                <label for="pass">Passcode:</label>
-            </td>
-            <td>
-                <input type="password" id="pass" name="pass">
-            </td>
-        </tr>
-        <tr>
-            <td colspan="2">
-                <input type="submit" value="Config">
-            </td>
-        </tr>
-    </form>
+	<tr>
+		<td><img src="Yuster_logo.webp" alt="Yuster logo" width="50"></td>
+		<td><h1>Setup WiFi</h1></td>
+	</tr>
+	<form action="wificonfig" method="post">
+		<tr>
+			<td width="100px"><label for="ssid">SSID:</label></td>
+			<td><input type="text" pattern="[\x00-\x7F]*" id="ssid" name="ssid"></td>
+		</tr>
+		<tr>
+			<td width="100px"><label for="auth">Security:</label></td>
+			<td><select name="auth" id="auth" onchange="auth_change()"> 
+				<option value="n">No authentication</option> 
+				<option value="p">WPA2-Personal</option> 
+				<option value="e">WPA2-Enterprise</option> 
+			</select></td>
+		</tr>
+		<tr arg="user" class="hidden">
+			<td width="100px"><label for="user">Username:</label></td>
+			<td><input type="text" pattern="[\x00-\x7F]*" id="user" name="user"></td>
+		</tr>
+		<tr arg="pw" class="hidden">
+			<td width="100px"><label for="pass">Passcode:</label></td>
+			<td><input type="password" id="pass" name="pass"></td>
+		</tr>
+		<tr>
+			<td colspan="2"><input type="submit" class="button" value="Save"></td>
+		</tr>
+	</form>
+	<form action="programmer.html">
+		<tr>
+			<td colspan="2">
+				<hr><input type="submit" class='button' value="Create task" />
+			</td>
+		</tr>
+	</form>
+	<tr>
+		<td colspan="2"><h3>© Yuster electronics 2024</h3></td>
+	</tr>
 </table>
 </body>
 </html>
