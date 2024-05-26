@@ -17,6 +17,8 @@
 bool try_connect();
 bool connect_wifi();
 void config_server();
+void start_server();
+void stop_server();
 void loop_server();
 uint32_t setup_wifi_ap();
 

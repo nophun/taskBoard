@@ -47,13 +47,16 @@ void TaskBoard::setup() {
     display_header(DEVICE_ID);
     display_value("CONNECTING");
     display_refresh();
+    stop_server();
+    config_server();
 
     if (connect_wifi()) {
         Serial.println("\nWiFi connected");
         Serial.print("IP address: ");
         Serial.println(get_my_ip().toString());
-        config_server();
         display_header(get_my_ip().toString());
+        config_server();
+        start_server();
         display_value("READY");
     } else {
         display_value("NO WIFI");
@@ -89,8 +92,9 @@ void TaskBoard::loop() {
             /* Button hold down for 2 seconds */
             if (m_button_time && ((millis() - m_button_time) > cResetDelay)) {
                 Serial.println("Configure WiFi AP");
+                stop_server();
                 uint32_t passcode = setup_wifi_ap();
-                config_server();
+                start_server();
                 m_ap_mode = true;
                 Serial.println(WiFi.softAPIP().toString());
                 Serial.println(WiFi.softAPSSID());
