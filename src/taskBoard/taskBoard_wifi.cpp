@@ -73,7 +73,7 @@ bool connect_wifi() {
 
     if (params["ssid"].length() != 0) {
         char mode = params["auth"][0];
-        Serial.println("Trying to connect to configured WiFi (" + params["ssid"] + ")[" + params["pass"] + "]");
+        Serial.println("Trying to connect to configured WiFi (" + params["ssid"] + ")"/* + "[" + params["pass"] + "]"*/);
         switch (mode) {
             case 'n':
                 if (connect_open(params["ssid"])) {

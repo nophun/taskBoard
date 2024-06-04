@@ -130,7 +130,9 @@ void Helper::process_key_value(const String& keyValue, std::map<String, String> 
     int delimiterPos = keyValue.indexOf('=');
     if (delimiterPos != -1) {
         String key = keyValue.substring(0, delimiterPos);
+        Helper::decode_uri(&key);
         String value = keyValue.substring(delimiterPos + 1);
+        Helper::decode_uri(&value);
         (*params)[key] = value;
     }
 }
@@ -167,4 +169,59 @@ void Helper::list_dir(Print *logger, const String& dirname, uint8_t levels) {
     }
     root.close();
     file.close();
+}
+
+void Helper::decode_uri(String *original) {
+    static constexpr size_t URL_SET = 39U;
+
+    static constexpr struct {
+        const char *encoded;
+        const char *decoded;
+    } char_map[URL_SET] = {
+        {"%E2%82%AC", "€"},
+        {"%C3%A8", "è"},
+        {"%C3%A9", "é"},
+        {"%C3%A0", "à"},
+        {"%C3%BC", "ü"},
+        {"%20", " "},
+        {"%22", "\""},
+        {"%25", "%"},
+        {"%2D", "-"},
+        {"%2E", "."},
+        {"%3C", "<"},
+        {"%3E", ">"},
+        {"%5C", "\\"},
+        {"%5E", "^"},
+        {"%5F", "_"},
+        {"%60", "`"},
+        {"%7B", "{"},
+        {"%7C", "|"},
+        {"%7D", "}"},
+        {"%7E", "~"},
+        {"%21", "!"},
+        {"%23", "#"},
+        {"%24", "$"},
+        {"%25", "%"},
+        {"%26", "&"},
+        {"%27", "'"},
+        {"%28", "("},
+        {"%29", ")"},
+        {"%2A", "*"},
+        {"%2B", "+"},
+        {"%2C", ","},
+        {"%2F", "/"},
+        {"%3A", ":"},
+        {"%3B", ";"},
+        {"%3D", "="},
+        {"%3F", "?"},
+        {"%40", "@"},
+        {"%5B", "["},
+        {"%5D", "]"}
+    };
+
+    char *pch;
+    //iterate through the percent encoding array
+    for (int i = 0; i < URL_SET; ++i) {
+        original->replace(char_map[i].encoded, char_map[i].decoded);
+    }
 }

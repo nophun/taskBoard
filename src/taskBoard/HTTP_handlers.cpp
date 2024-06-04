@@ -138,11 +138,11 @@ void HTTPHandlers::handle_wifi_config(HTTPRequest *req, HTTPResponse *res) {
 
     std::map<String, String> params;
     Helper::parse_query_string(query, &params);
-    for (auto const& param : params) {
-        Serial.print(param.first);
-        Serial.print(": ");
-        Serial.println(param.second);
-    }
+    // for (auto const& param : params) {
+    //     Serial.print(param.first);
+    //     Serial.print(": ");
+    //     Serial.println(param.second);
+    // }
 
     if (TaskBoard::store_wifi_config(query)) {
         read_file("/success.html", res);
@@ -158,6 +158,7 @@ void HTTPHandlers::handle_program(HTTPRequest *req, HTTPResponse *res) {
     String buffer = req->getRequestString().c_str();
     int i = buffer.indexOf('?');
     buffer = buffer.substring(i+1);
+    buffer.replace("+", " ");
     Serial.println(buffer);
 
     std::map<String, String> params;

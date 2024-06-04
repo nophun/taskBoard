@@ -29,6 +29,8 @@ public:
     static void parse_query_string(const String& query, std::map<String, String> *params);
     static void process_key_value(const String& keyValue, std::map<String, String> *params);
     static void list_dir(Print *logger, const String& dirname, uint8_t levels = 3);
+    static void decode_uri(String *original);
 
 private:
+    
 };
