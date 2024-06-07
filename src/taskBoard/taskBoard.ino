@@ -50,18 +50,26 @@ void TaskBoard::setup() {
     stop_server();
     config_server();
 
-    if (connect_wifi()) {
-        Serial.println("\nWiFi connected");
-        Serial.print("IP address: ");
-        Serial.println(get_my_ip().toString());
-        display_header(get_my_ip().toString());
-        config_server();
-        start_server();
+    if (check_button()) {
+        Serial.println("Reset button pressed. Skipping WiFi connection.");
         display_value("READY");
+        while(check_button()) {
+            delay(100);
+        }
     } else {
-        display_value("NO WIFI");
-        show_task(help_title, help_text);
-        return;
+        if (connect_wifi()) {
+            Serial.println("\nWiFi connected");
+            Serial.print("IP address: ");
+            Serial.println(get_my_ip().toString());
+            display_header(get_my_ip().toString());
+            config_server();
+            start_server();
+            display_value("READY");
+        } else {
+            display_value("NO WIFI");
+            show_task(help_title, help_text);
+            return;
+        }
     }
     display_refresh();
 }
