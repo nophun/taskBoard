@@ -1,28 +1,28 @@
 #pragma once
 
 #include <Arduino.h>
-#include <WebServer.h>
+#include <HTTPRequest.hpp>
+#include <HTTPResponse.hpp>
+
+using namespace httpsserver;
 
 class HTTPHandlers {
 public:
-  explicit HTTPHandlers(WebServer *server) : m_server{server} {
-    m_handler = this;
-  }
-  ~HTTPHandlers() = default;
+    ~HTTPHandlers() = default;
 
-  WebServer *get_server(void) { return m_server; }
-  static void handle_root();
-  static void handle_file();
-  static void handle_info();
-  static void handle_program();
-  static void handle_generic_args();
-  static HTTPHandlers *get() { return m_handler; }
+    static void handle_file(HTTPRequest *req, HTTPResponse *res);
+    static void handle_secure_root(HTTPRequest *req, HTTPResponse *res);
+    static void handle_insecure_root(HTTPRequest *req, HTTPResponse *res);
+    static void handle_program(HTTPRequest *req, HTTPResponse *res);
+    static void handle_programmer_path(HTTPRequest *req, HTTPResponse *res);
+    static void handle_wifi_config(HTTPRequest *req, HTTPResponse *res);
+    static void handle_list_path(HTTPRequest *req, HTTPResponse *res);
+    static void handle_wifi_path(HTTPRequest *req, HTTPResponse *res);
+    static void handle_restart_path(HTTPRequest *req, HTTPResponse *res);
 
 private:
-  static void send_response(uint8_t code, String message);
-  static bool load_from_fs(WebServer *server);
-  
-  WebServer *m_server {nullptr};
-  inline static HTTPHandlers *m_handler {nullptr};
+    HTTPHandlers() = default;
+    static bool read_file(const String &filename, HTTPResponse *res);
+    static void respond_ok(HTTPResponse *res);
+    static void respond_redirect(HTTPResponse *res, const String &address);
 };
-

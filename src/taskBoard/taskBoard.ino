@@ -6,7 +6,6 @@
 #include <LittleFS.h>
 #include "taskBoard.h"
 #include "bsp.h"
-#include "oled.h"
 #include "helpers.h"
 #include "taskBoard_wifi.h"
 #include "fonts/Pockota_Bold16pt7b.h"
@@ -20,16 +19,10 @@ GxEPD2_BW<GxEPD2_213_BN, GxEPD2_213_BN::HEIGHT> display(GxEPD2_213_BN(EPD_CS, EP
 // 2.9'' EPD Module
 //GxEPD2_BW<GxEPD2_290_BS, GxEPD2_290_BS::HEIGHT> display(GxEPD2_290_BS(/*CS=5*/ 5, /*DC=*/ 0, /*RST=*/ 2, /*BUSY=*/ 15)); // DEPG0290BS 128x296, SSD1680
 //GxEPD2_3C<GxEPD2_290_C90c, GxEPD2_290_C90c::HEIGHT> display(GxEPD2_290_C90c(/*CS=5*/ 5, /*DC=*/ 0, /*RST=*/ 2, /*BUSY=*/ 15)); // GDEM029C90 128x296, SSD1680
+DNSServer dnsServer{};
+TaskBoard taskboard(&display, &oled);
 
-TaskBoard taskboard(&display);
-
-void setup_oled() {
-    Wire.begin();
-    oled.start();
-    oled.set_header("", Alignment::Center);
-    oled.set_value("CONNECTING");
-    oled.refresh();
-}
+bool ap_mode = false;
 
 void setup() {
     Serial.begin(115200);
@@ -38,37 +31,107 @@ void setup() {
     if (LittleFS.begin(true)) {
         Serial.println("Filesystem mounted OK");
     }
+    
+    pinMode(BUTTON_PIN, INPUT_PULLUP);
 
-    setup_oled();
-
-    if (setup_wifi()) {
-        Serial.println("\nWiFi connected");
-        Serial.println("IP address: ");
-        Serial.println(Helper::convert_IP(WiFi.localIP()).c_str());
-        
-        config_server();
-        
-        oled.set_header(Helper::convert_IP(WiFi.localIP()).c_str(), Alignment::Center);
-        oled.set_value("READY");
-    } else {
-        oled.set_value("NO WIFI");
-    }
-    oled.refresh();
+    taskboard.setup();
 }
 
 void loop() {
-    if (taskboard.check_incoming_byte()) {
-        taskboard.show_task(taskboard.get_title(), taskboard.get_desc());
-    }
-    taskboard.check_timeout();
-
-    if (WiFi.status() == WL_CONNECTED) {
-        server.handleClient();
-    }
-
-    oled.refresh();
-
+    taskboard.loop();
     delay(1);
+}
+
+void TaskBoard::setup() {
+    init_display();
+    display_header(DEVICE_ID);
+    display_value("CONNECTING");
+    display_refresh();
+    stop_server();
+    config_server();
+
+    if (check_button()) {
+        Serial.println("Reset button pressed. Skipping WiFi connection.");
+        display_value("READY");
+        while(check_button()) {
+            delay(100);
+        }
+    } else {
+        if (connect_wifi()) {
+            Serial.println("\nWiFi connected");
+            Serial.print("IP address: ");
+            Serial.println(get_my_ip().toString());
+            display_header(get_my_ip().toString());
+            config_server();
+            start_server();
+            display_value("READY");
+        } else {
+            display_value("NO WIFI");
+            show_task(help_title, help_text);
+            return;
+        }
+    }
+    display_refresh();
+}
+
+void TaskBoard::loop() {
+    shall_restart();
+
+    if (check_incoming_byte()) {
+        String title = get_title();
+        String desc = get_desc();
+        show_task(title, desc);
+    }
+    check_timeout();
+
+    if (is_ap_mode()) {
+        dnsServer.processNextRequest();
+        loop_server();
+    } else if (WiFi.status() == WL_CONNECTED) {
+        loop_server();
+    }
+
+    if (check_button()) {
+        if (!m_button_state) {
+            /* Button newly pressed */
+            m_button_time = millis();
+            m_button_state = true;
+        } else {
+            /* Button hold down for 2 seconds */
+            if (m_button_time && ((millis() - m_button_time) > cResetDelay)) {
+                Serial.println("Configure WiFi AP");
+                stop_server();
+                uint32_t passcode = setup_wifi_ap();
+                start_server();
+                m_ap_mode = true;
+                Serial.println(WiFi.softAPIP().toString());
+                Serial.println(WiFi.softAPSSID());
+                String h1 = String("ssid: ") + WiFi.softAPSSID();
+                String h2 = String("passcode: ") + String(passcode);
+                String h3 = String("ip: ") + get_my_ip().toString();
+                display_header(h1, h2, h3);
+                display_value("WIFI CONF");
+                display_refresh();
+                m_button_time = 0;
+            }
+        }
+    } else {
+        /* Button release before 2 seconds -> restart */
+        if (m_button_time && ((millis() - m_button_time) < cResetDelay)) {
+            ESP.restart();
+        }
+        m_button_state = false;
+        m_button_time = 0;
+    }
+
+    display_refresh();
+}
+
+bool TaskBoard::check_button() {
+    if (digitalRead(BUTTON_PIN) == LOW) {
+        return true;
+    }
+    return false;
 }
 
 bool TaskBoard::check_incoming_byte() {
@@ -149,6 +212,7 @@ String TaskBoard::limit_title(const String& raw_title) {
     static constexpr size_t max_title_len = 28;
     static constexpr size_t line_height_limit = 32;
 
+    auto tag = TaskBoard::get()->m_tag;
     String limited_title;
     size_t len = min_title_len;
     size_t max_len = min(raw_title.length(), max_title_len);
@@ -161,10 +225,10 @@ String TaskBoard::limit_title(const String& raw_title) {
         return raw_title;
     }
 
-    display.setFont(&Pockota_Bold16pt7b);
+    tag->setFont(&Pockota_Bold16pt7b);
     do {
         limited_title = raw_title.substring(0, len);
-        display.getTextBounds(limited_title, 0, 0, &tbx, &tby, &tbw, &tbh);
+        tag->getTextBounds(limited_title, 0, 0, &tbx, &tby, &tbw, &tbh);
         Serial.println("Title '" + limited_title + "' bounds: " + String(tbx) + " " + String(tby) + " " + String(tbw) + " " + String(tbh) + ", len " + String(len));
         
         if (tbh > line_height_limit) {
@@ -180,35 +244,109 @@ String TaskBoard::limit_title(const String& raw_title) {
     return limited_title;
 }
 
-void TaskBoard::show_task(String title, String desc) {
+void TaskBoard::show_task(const String &title, const String &desc) {
+    auto tag = TaskBoard::get()->m_tag;
     int16_t tbx, tby;
     uint16_t tbw, tbh;
 
-    display.init(115200, true, 50, false);
-    display.setRotation(1);
+    tag->init(115200, true, 50, false);
+    tag->setRotation(1);
 
     String limited_title = TaskBoard::limit_title(title);
     Serial.println("Title: " + limited_title + "\nDesc: "+ desc);
 
-    display.setFont(&Pockota_Bold16pt7b);
-    display.getTextBounds(desc, 0, 56, &tbx, &tby, &tbw, &tbh);
+    tag->setFont(&Pockota_Bold16pt7b);
+    tag->getTextBounds(desc, 0, 56, &tbx, &tby, &tbw, &tbh);
     Serial.println("desc Text bounds: " + String(tbx) + " " + String(tby) + " " + String(tbw) + " " + String(tbh));
-    display.getTextBounds(limited_title, 0, 0, &tbx, &tby, &tbw, &tbh);
+    tag->getTextBounds(limited_title, 0, 0, &tbx, &tby, &tbw, &tbh);
     Serial.println("title Text bounds: " + String(tbx) + " " + String(tby) + " " + String(tbw) + " " + String(tbh));
-    display.setFullWindow();
-    display.firstPage();
+    tag->setFullWindow();
+    tag->firstPage();
     do {
-        display.fillScreen(GxEPD_WHITE); 
+        tag->fillScreen(GxEPD_WHITE); 
 
-        display.setTextColor(display.epd2.hasColor ? GxEPD_RED : GxEPD_BLACK);
-        display.setCursor(-tbx + (250 - tbw) / 2, 23);
-        display.setFont(&Pockota_Bold16pt7b);
-        display.print(limited_title);
+        tag->setTextColor(tag->epd2.hasColor ? GxEPD_RED : GxEPD_BLACK);
+        tag->setCursor(-tbx + (250 - tbw) / 2, 23);
+        tag->setFont(&Pockota_Bold16pt7b);
+        tag->print(limited_title);
 
-        display.setTextColor(GxEPD_BLACK);
-        display.setCursor(0, 60);
-        display.setFont(&VaisalaSans_Light7pt7b);
-        display.print(desc);
+        tag->setTextColor(GxEPD_BLACK);
+        tag->setCursor(0, 60);
+        tag->setFont(&VaisalaSans_Light7pt7b);
+        tag->print(desc);
     }
-    while (display.nextPage());
+    while (tag->nextPage());
+}
+
+void TaskBoard::init_display() {
+    Wire.begin();
+    m_display->start();
+}
+
+void TaskBoard::display_header(const String &header1, const String &header2,
+    const String &header3) {
+    m_taskboard->m_display_headers[0] = header1;
+    m_taskboard->m_display_headers[1] = header2;
+    m_taskboard->m_display_headers[2] = header3;
+    m_taskboard->m_header_set_time = millis();
+    m_taskboard->m_header_index = 0U;
+    m_taskboard->m_display->set_header(header1.c_str(), Alignment::Center);
+}
+
+void TaskBoard::display_value(const String &value) {
+    m_taskboard->m_display->set_value(value.c_str());
+}
+
+void TaskBoard::display_refresh() {
+    if (millis() - m_header_set_time > 5000) {
+        for (size_t i = 0U; i < m_display_headers.size() - 1U; ++i) {
+            m_header_index = (++m_header_index) % m_display_headers.size();
+            if (m_display_headers[m_header_index].length() > 0) {
+                m_display->set_header(m_display_headers[m_header_index].c_str(), Alignment::Center);
+                m_header_set_time = millis();
+                break;
+            }
+        }
+    }
+    m_display->refresh();
+}
+
+bool TaskBoard::store_wifi_config(String config) {
+    File config_file = LittleFS.open(wificonfig_filename, FILE_WRITE);
+    if (!config_file) {
+        Serial.println("Failed to open file for writing");
+        return false;
+    }
+    config_file.print(config);
+    config_file.close();
+    Serial.println("wifi config stored");
+
+    return true;
+}
+
+String TaskBoard::read_wifi_config() {
+    File config_file = LittleFS.open(wificonfig_filename);
+    if (!config_file) {
+        Serial.println("Failed to open file for reading");
+        return "";
+    }
+    char buffer[256];
+    int len = config_file.read(reinterpret_cast<uint8_t *>(buffer), 256);
+    buffer[len] = '\0';
+    config_file.close();
+    return buffer;
+}
+
+void TaskBoard::shall_restart() {
+    if (m_restart_deadline != 0 && millis() > m_restart_deadline) {
+        ESP.restart();
+    }
+}
+
+IPAddress TaskBoard::get_my_ip() {
+    if (m_taskboard->is_ap_mode()) {
+        return WiFi.softAPIP();
+    } else {
+        return WiFi.localIP();
+    }
 }
