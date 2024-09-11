@@ -1,5 +1,4 @@
-# Yuster Taskboard
-![Yuster logo](/Yuster_logo_128px.png)
+# <img src="/gui/Yuster_logo_128px.png" height="50" /> Yuster Taskboard
 
 ## Requirements
 * Arduino Esp32 board support (tested with 2.0.14)

@@ -1,5 +1,4 @@
-# Yuster Taskboard programmer UI
-![Yuster logo](/Yuster_logo_128px.png)
+# <img src="/gui/Yuster_logo_128px.png" height="50" /> Yuster Taskboard programmer UI
 
 GUI program to program taskboard tasks offline.
 
