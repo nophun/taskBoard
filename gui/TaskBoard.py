@@ -124,7 +124,7 @@ class Programmer():
 
 if __name__ == "__main__":
     form_window = Tk()
-    icon = ImageTk.PhotoImage(file = 'Yuster_logo_128px.png')
+    icon = ImageTk.PhotoImage(file = 'Yuster.ico')
     form_window.wm_iconphoto(False, icon)
 
     T = Task()
