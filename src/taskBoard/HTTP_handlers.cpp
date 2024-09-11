@@ -159,6 +159,7 @@ void HTTPHandlers::handle_program(HTTPRequest *req, HTTPResponse *res) {
     int i = buffer.indexOf('?');
     buffer = buffer.substring(i+1);
     buffer.replace("+", " ");
+    buffer.replace("%0A", "\n");
     Serial.println(buffer);
 
     std::map<String, String> params;
