@@ -68,6 +68,7 @@ bool connect_enterprise(const char *ssid, const char *id, const char *user, cons
 
 bool connect_wifi() {
     String config = TaskBoard::read_wifi_config();
+    Serial.println(config);
     std::map<String, String> params;
     Helper::parse_query_string(config, &params);
 
@@ -112,6 +113,7 @@ void config_server() {
     ResourceNode *nodeWifiConfig    = new ResourceNode("/wificonfig", "POST", &HTTPHandlers::handle_wifi_config);
     ResourceNode *nodeProgram       = new ResourceNode("/program", "GET", &HTTPHandlers::handle_program);
     ResourceNode *nodeFile          = new ResourceNode("", "GET", &HTTPHandlers::handle_file);
+    ResourceNode *nodePost          = new ResourceNode("/post", "POST", &HTTPHandlers::handle_post);
 
     insecureServer.registerNode(nodeInsecureRoot);
     insecureServer.registerNode(nodeList);
@@ -120,6 +122,7 @@ void config_server() {
     insecureServer.registerNode(nodeRestart);
     insecureServer.registerNode(nodeWifi);
     insecureServer.registerNode(nodeWifiHtml);
+    insecureServer.registerNode(nodePost);
     insecureServer.setDefaultNode(nodeFile);
     secureServer.registerNode(nodeList);
     secureServer.registerNode(nodeProgram);
@@ -128,6 +131,7 @@ void config_server() {
     secureServer.registerNode(nodeSecureRoot);
     secureServer.registerNode(nodeWifi);
     secureServer.registerNode(nodeWifiConfig);
+    secureServer.registerNode(nodePost);
     secureServer.setDefaultNode(nodeFile);
 }
 

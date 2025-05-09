@@ -193,3 +193,25 @@ void HTTPHandlers::handle_file(HTTPRequest *req, HTTPResponse *res) {
         return;
     }
 }
+
+void HTTPHandlers::handle_post(HTTPRequest *req, HTTPResponse *res) {
+    Serial.println(req->getContentLength());
+    char buf[200] = {};
+    req->readChars(buf, req->getContentLength());
+    Serial.println(buf);
+    res->setStatusCode(200);
+    res->setStatusText("OK");
+    res->setHeader("Content-Type", "text/plain");
+    res->println("OK");
+
+    String title = "";
+    String desc = "";
+    String buffer = String(buf);
+    buffer.replace("+", " ");
+    buffer.replace("%0A", "\n");
+    std::map<String, String> params;
+    Helper::parse_query_string(buffer, &params);
+    title = params["title"];
+    desc = params["desc"];
+    TaskBoard::show_task(title, desc);
+}

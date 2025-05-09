@@ -130,7 +130,8 @@ void OLED::update_ssd1306(uint8_t addr, uint32_t* data) {
             command_ssd1306(addr, 0xB0 | x);
             command_ssd1306(addr, 0x00);
             command_ssd1306(addr, 0x10);
-            write_data_ssd1306(addr, ((uint8_t*)data)+i, 128U);
+            write_data_ssd1306(addr, ((uint8_t*)data)+i, 64U);
+            write_data_ssd1306(addr, ((uint8_t*)data)+i+64U, 64U);
         }
         x++;
     }
