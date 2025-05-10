@@ -3,6 +3,7 @@
 // enable or disable GxEPD2_GFX base class
 #define ENABLE_GxEPD2_GFX 0
 
+#include <Arduino.h>
 #include <SimpleSerialShell.h>
 #include <GxEPD2_BW.h>
 #include <GxEPD2_3C.h>
@@ -12,8 +13,8 @@
 #include "bsp.h"
 
 // 2.13'' EPD Module
-GxEPD2_BW<GxEPD2_213_BN, GxEPD2_213_BN::HEIGHT> display(GxEPD2_213_BN(EPD_CS, EPD_DC, EPD_RST, EPD_BUSY)); // DEPG0213BN 122x250, SSD1680
-// GxEPD2_3C<GxEPD2_213_Z98c, GxEPD2_213_Z98c::HEIGHT> display(GxEPD2_213_Z98c(EPD_CS, EPD_DC, EPD_RST, EPD_BUSY)); // DEPG0213BN 122x250, SSD1680
+// GxEPD2_BW<GxEPD2_213_BN, GxEPD2_213_BN::HEIGHT> display(GxEPD2_213_BN(EPD_CS, EPD_DC, EPD_RST, EPD_BUSY)); // DEPG0213BN 122x250, SSD1680
+GxEPD2_3C<GxEPD2_213_Z98c, GxEPD2_213_Z98c::HEIGHT> display(GxEPD2_213_Z98c(EPD_CS, EPD_DC, EPD_RST, EPD_BUSY)); // DEPG0213BN 122x250, SSD1680
 
 // 2.9'' EPD Module
 //GxEPD2_BW<GxEPD2_290_BS, GxEPD2_290_BS::HEIGHT> display(GxEPD2_290_BS(/*CS=5*/ 5, /*DC=*/ 0, /*RST=*/ 2, /*BUSY=*/ 15)); // DEPG0290BS 128x296, SSD1680
@@ -29,7 +30,7 @@ void setup() {
     Serial.begin(115200);
 
     display.init(115200, true, 50, false);
-    display.setRotation(1);
+    display.setRotation(3);
 
     shell.attach(Serial);
     shell.addCommand(F("task"), command_task);
@@ -37,6 +38,7 @@ void setup() {
     shell.addCommand(F("desc"), command_description);
     shell.addCommand(F("fastpartial"), command_fastpartial);
     shell.addCommand(F("partial"), command_partial);
+    shell.addCommand(F("partialmode"), command_partialmode);
     shell.addCommand(F("init"), init);
     shell.addCommand(F("check"), check);
     shell.addCommand(F("off"), off);
@@ -59,14 +61,17 @@ void setup() {
 
 int init(int argc, char** argv) {
     display.refresh();
+    return EXIT_SUCCESS;
 }
 
 int check(int argc, char** argv) {
     display.refresh(0, 249, 1, 1);
+    return EXIT_SUCCESS;
 }
 
 int off(int argc, char** argv) {
     display.powerOff();
+    return EXIT_SUCCESS;
 }
 
 void init_display_content() {
@@ -170,6 +175,12 @@ int command_fastpartial(int argc, char** argv) {
 }
 
 int command_partial(int argc, char** argv) {
+    showPartialUpdate();
+    delay(1000);
+    return EXIT_SUCCESS;
+}
+
+int command_partialmode(int argc, char** argv) {
     helloFullScreenPartialMode();
     return EXIT_SUCCESS;
 }
