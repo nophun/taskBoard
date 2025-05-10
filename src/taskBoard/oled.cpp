@@ -46,7 +46,7 @@ void OLED::init_ssd1306(uint8_t addr) {
     // display on
     command_ssd1306(addr, 0xA5);
     // contrast aka current, 128 is midpoint    
-    command_ssd1306(addr, 0x81, 0xCF);
+    command_ssd1306(addr, 0x81, 0x40);
     // prechage, rtfm   
     command_ssd1306(addr, 0xD9, 0xF1);
     // vcomh deselect level, 0.77 VDD
@@ -102,8 +102,6 @@ void OLED::command_ssd1306(uint8_t addr, uint8_t cmd, uint8_t a, uint8_t b, uint
 void OLED::write_data_ssd1306(uint8_t addr, uint8_t* data, uint32_t len) {
     Wire.beginTransmission(addr);
     Wire.write(OLED_DATA);
-    Wire.write(0x00);
-    Wire.write(0x00);
     Wire.write(data, len);
     Wire.endTransmission(true);
 }
@@ -130,6 +128,9 @@ void OLED::update_ssd1306(uint8_t addr, uint32_t* data) {
             command_ssd1306(addr, 0xB0 | x);
             command_ssd1306(addr, 0x00);
             command_ssd1306(addr, 0x10);
+            // some OLEDs works with this
+            // write_data_ssd1306(addr, ((uint8_t*)data)+i, 128U);
+            // some OLEDs works with this
             write_data_ssd1306(addr, ((uint8_t*)data)+i, 64U);
             write_data_ssd1306(addr, ((uint8_t*)data)+i+64U, 64U);
         }
