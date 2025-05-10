@@ -40,7 +40,13 @@ class Task():
         crc = Task.calc_crc(bytestream)
         bytestream += crc.to_bytes(1)
 
-        ser = serial.Serial(port=com, baudrate=115200, bytesize=8, parity='N', stopbits=1, timeout=2, dsrdtr=None)
+        ser = serial.Serial(port=com,
+                            baudrate=115200,
+                            bytesize=8,
+                            parity='N',
+                            stopbits=1,
+                            timeout=2,
+                            dsrdtr=None)
         ser.setRTS(False)
         ser.setDTR(False)
         ser.write(bytestream)
@@ -48,13 +54,15 @@ class Task():
 
         recv_buf = ""
         while True:
-            x = ser.read()
+            x = ser.read(8)
             if len(x) == 0:
                 break
             else:
                 recv_buf += x.decode('utf-8')
+            if (recv_buf.rfind("_PowerOff") > 0):
+                ser.read(8)
+                break;
 
-        print(recv_buf)
         print("done")
         ser.close()
 
@@ -71,19 +79,31 @@ class Programmer():
         self.frame.configure(bg='#cccccc')
 
         # Title entry
-        self.T = Entry(self.form_window, justify='center', width=12, bd=0, bg="#cccccc", fg="#222222", font=("Pockota Bold", 20, "bold"))
+        self.T = Entry(self.form_window, justify='center', width=12, bd=0,
+            bg="#cccccc", fg="#222222", font=("Pockota Bold", 20, "bold"))
         self.T.place(x=33, y=0, height=36, width=232)
         self.T.insert(index=0, string="Title") 
 
         # Description entry
-        self.D = Text(self.form_window, height=4, width=29, bd=0, bg="#cccccc", fg="#222222", font=("Vaisala Sans Light", 10))
+        self.D = Text(self.form_window, height=4, width=29, bd=0, bg="#cccccc",
+            fg="#222222", font=("Vaisala Sans Light", 10))
         self.D.place(x=33, y=42, height=74, width=232)
         self.D.insert(1.0, "Description") 
 
         # Program button
-        self.B = Button(self.form_window, command=self.create_task, text="Create task", font=("Vaisala Sans Medium", 12, "bold"))
-        self.B.place(x=114, y=130, height=36, width=160)
+        self.B = Button(self.form_window, command=self.create_task,
+            text="Create task", font=("Vaisala Sans Medium", 12, "bold"))
+        self.B.place(x=140, y=130, height=36, width=130)
 
+        # Refresh button
+        self.R = Button(self.form_window, command=self.refresh_com_list,
+            text="↺", font=("Vaisala Sans Medium", 12, "bold"))
+        self.R.place(x=24, y=132, height=32, width=32)
+
+        self.refresh_com_list()
+
+
+    def refresh_com_list(self):
         # Preselect previously selected COM port if it is still available
         selection = None
         try:
@@ -105,9 +125,9 @@ class Programmer():
         self.value_inside = StringVar(self.form_window, value=selection)
 
         self.O = OptionMenu(self.form_window, self.value_inside, *options, command=self.option_changed)
-        self.O.place(x=24, y=130, height=36, width=80)
+        self.O.place(x=56, y=130, height=36, width=80)
 
-    def create_task(self): 
+    def create_task(self):
         print("Selected COM: {}".format(self.value_inside.get()))
         print("Title: {}".format(self.T.get())) 
         print("Desc: {}".format(self.D.get("1.0",END))) 
@@ -129,4 +149,5 @@ if __name__ == "__main__":
 
     T = Task()
     P = Programmer(form_window)
+    form_window.resizable(False, False)
     form_window.mainloop()
