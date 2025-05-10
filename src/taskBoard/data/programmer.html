@@ -48,6 +48,42 @@ function Program() {
 			console.error('Error:', error);
 		});
 }
+// Make a POST request
+function ProgramPOST() {
+	var host = window.location.origin;
+	var title = clean_string(document.getElementById('title').value);
+	var desc = clean_string(document.getElementById('desc').value);
+	const payload = new URLSearchParams({
+		title: title,
+		desc: desc,
+	});
+	const url = new URL(host + '/post');
+	console.log(host);
+	console.log(title);
+	console.log(desc);
+	console.log(payload.toString());
+
+	fetch(url.toString(), {
+		method: "POST",
+		body: payload.toString(),
+		headers: {
+			"Content-type": "application/text; charset=UTF-8"
+		}
+	})
+		.then((response) => {
+			if (!response.ok) {
+				throw new Error('Network response was not ok');
+			}
+			console.log(response);
+			return response.body;
+		})
+		.then(data => {
+			console.log(data);
+		})
+		.catch(error => {
+			console.error('Error:', error);
+		});
+}
 function ClearTag() {
 	var host = window.location.origin;
 	document.getElementById('title').value = '';
@@ -72,6 +108,10 @@ function ClearTag() {
 			console.error('Error:', error);
 		});
 }
+function Clear() {
+	document.getElementById('title').value = '';
+	document.getElementById('desc').value = '';
+}
 	</script>
 </head>
 <body>
@@ -81,13 +121,19 @@ function ClearTag() {
 		<td><img src="Yuster_logo.webp" alt="Yuster logo" width="50"></td>
 		<td><h1>TaskBoard</h1></td>
 	</tr>
-	<tr class='input_area'><td colspan="2">
-		<textarea id='title' name='title' rows='1' cols='14'>Title</textarea><br>
-		<textarea id='desc' name='desc' rows='4' cols='34'>Description</textarea>
-	</td></tr>
+	<form action="post" method="post">
+		<tr class='input_area'><td colspan="2">
+			<textarea id='title' name='title' rows='1' cols='14'>Title</textarea><br>
+			<textarea id='desc' name='desc' rows='4' cols='34'>Description</textarea>
+		</td></tr>
+		<tr>
+			<td colspan='2'><input type='submit' class='button' value='Save'></td>
+			<td colspan='2'><input type='submit' class='button' value='Clear' onclick='Clear()'></td>
+		</tr>
+	</form>
 	<tr class='submit_button'>
 		<td colspan="2">
-			<input id="create" class='button' type='submit' value='Create task' onclick='Program()'></input>
+			<input id="create" class='button' type='submit' value='Create task' onclick='ProgramPOST()'></input>
 			<input id="clear" class='button' type='submit' value='Clear tag' onclick='ClearTag()'></input>
 		</td>
 	</tr>

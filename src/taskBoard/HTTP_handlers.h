@@ -19,6 +19,7 @@ public:
     static void handle_list_path(HTTPRequest *req, HTTPResponse *res);
     static void handle_wifi_path(HTTPRequest *req, HTTPResponse *res);
     static void handle_restart_path(HTTPRequest *req, HTTPResponse *res);
+    static void handle_post(HTTPRequest *req, HTTPResponse *res);
 
 private:
     HTTPHandlers() = default;

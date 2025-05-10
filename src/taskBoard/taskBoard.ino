@@ -40,6 +40,12 @@ void setup() {
 void loop() {
     taskboard.loop();
     delay(1);
+
+    static uint32_t cnt = 0;
+    if (cnt++ > 1000) {
+        Serial.println(ESP.getFreeHeap());
+        cnt = 0;
+    }
 }
 
 void TaskBoard::setup() {
