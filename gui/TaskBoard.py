@@ -120,10 +120,14 @@ class Programmer():
             if com != None and port == com:
                 selection = com
 
-        if selection == None:
+        if len(options) == 0:
+            options.append("No COM ports available")
             selection = "Select"
-        self.value_inside = StringVar(self.form_window, value=selection)
+        else:
+            if selection == None:
+                selection = "Select"
 
+        self.value_inside = StringVar(self.form_window, value=selection)
         self.O = OptionMenu(self.form_window, self.value_inside, *options, command=self.option_changed)
         self.O.place(x=56, y=130, height=36, width=80)
 
